@@ -126,17 +126,85 @@ function UI.init(ctx)
 
   -- Content Frame
   local contentFrame = Instance.new("Frame")
-  contentFrame.Size = UDim2.new(1, -20, 1, -55)
-  contentFrame.Position = UDim2.new(0, 10, 0, 50)
+  contentFrame.Size = UDim2.new(1, -20, 1, -100)
+  contentFrame.Position = UDim2.new(0, 10, 0, 90)
   contentFrame.BackgroundTransparency = 1
   contentFrame.Parent = frame
 
-  local list = Instance.new("UIListLayout")
-  list.Padding = UDim.new(0, 8)
-  list.HorizontalAlignment = Enum.HorizontalAlignment.Center
-  list.Parent = contentFrame
+  -- Tab Buttons
+  local tabFrame = Instance.new("Frame")
+  tabFrame.Size = UDim2.new(1, -20, 0, 40)
+  tabFrame.Position = UDim2.new(0, 10, 0, 45)
+  tabFrame.BackgroundTransparency = 1
+  tabFrame.Parent = frame
 
-  local function button(text, onClick)
+  local tabLayout = Instance.new("UIListLayout")
+  tabLayout.FillDirection = Enum.FillDirection.Horizontal
+  tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+  tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+  tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+  tabLayout.Padding = UDim.new(0, 5)
+  tabLayout.Parent = tabFrame
+
+  local tabs = {}
+  local tabContents = {}
+
+  local function createTab(name, order)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(0, 80, 1, 0)
+    tabButton.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+    tabButton.TextColor3 = Color3.fromRGB(200, 200, 220)
+    tabButton.Font = Enum.Font.GothamBold
+    tabButton.TextSize = 14
+    tabButton.Text = name
+    tabButton.LayoutOrder = order
+    tabButton.Parent = tabFrame
+
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 8)
+    tabCorner.Parent = tabButton
+
+    local content = Instance.new("ScrollingFrame")
+    content.Size = UDim2.new(1, 0, 1, 0)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.ScrollBarThickness = 6
+    content.Visible = false
+    content.Parent = contentFrame
+
+    local list = Instance.new("UIListLayout")
+    list.Padding = UDim.new(0, 8)
+    list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    list.Parent = content
+
+    tabs[name] = tabButton
+    tabContents[name] = content
+    return tabButton, content
+  end
+
+  local function switchTab(name)
+    for n, c in pairs(tabContents) do
+      c.Visible = (n == name)
+    end
+    for n, b in pairs(tabs) do
+      b.BackgroundColor3 = (n == name) and Color3.fromRGB(50, 55, 75) or Color3.fromRGB(30, 35, 50)
+    end
+  end
+
+  createTab("Movimento", 1)
+  createTab("Jogador", 2)
+  createTab("Mundo", 3)
+
+  for name, button in pairs(tabs) do
+    button.MouseButton1Click:Connect(function()
+      switchTab(name)
+    end)
+  end
+
+  switchTab("Movimento") -- Aba padrão
+
+  local function createFeatureButton(parent, text, onClick)
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(0, 240, 0, 35)
     b.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
@@ -145,14 +213,12 @@ function UI.init(ctx)
     b.TextSize = 14
     b.Text = text
     b.AutoButtonColor = false
-    b.Parent = contentFrame
+    b.Parent = parent
 
-    -- Bordas arredondadas para botões
     local bCorner = Instance.new("UICorner")
     bCorner.CornerRadius = UDim.new(0, 8)
     bCorner.Parent = b
 
-    -- Hover effect
     b.MouseEnter:Connect(function()
       b.BackgroundColor3 = Color3.fromRGB(60, 65, 85)
     end)
@@ -196,11 +262,13 @@ function UI.init(ctx)
     minimized = not minimized
     if minimized then
       contentFrame.Visible = false
-      frame.Size = UDim2.new(0, 260, 0, 40)
+      tabFrame.Visible = false
+      frame.Size = UDim2.new(0, 280, 0, 45)
       minButton.Text = "+"
     else
       contentFrame.Visible = true
-      frame.Size = UDim2.new(0, 260, 0, 420)
+      tabFrame.Visible = true
+      frame.Size = UDim2.new(0, 280, 0, 450)
       minButton.Text = "−"
     end
   end)
@@ -218,42 +286,25 @@ function UI.init(ctx)
   if F.world and F.world.setup then F.world.setup(Core) end
   if F.stick and F.stick.setup then F.stick.setup(Core) end
 
+  -- Adicionar botões às abas corretas
   if F.fly then
-    button("Voo: OFF", function()
-      F.fly.toggle()
-    end)
+    createFeatureButton(tabContents["Movimento"], "Voo: OFF", function() F.fly.toggle() end)
   end
   if F.teleport then
-    button("TP ao Clicar: OFF", function()
-      F.teleport.toggleClickTP()
-    end)
+    createFeatureButton(tabContents["Movimento"], "TP ao Clicar: OFF", function() F.teleport.toggleClickTP() end)
   end
   if F.player then
-    button("Velocidade Hack: OFF", function()
-      F.player.toggleSpeed()
-    end)
-    button("Pulo Hack: OFF", function()
-      F.player.toggleJump()
-    end)
-    button("Invisível: OFF", function()
-      F.player.toggleInvisible()
-    end)
+    createFeatureButton(tabContents["Jogador"], "Velocidade Hack: OFF", function() F.player.toggleSpeed() end)
+    createFeatureButton(tabContents["Jogador"], "Pulo Hack: OFF", function() F.player.toggleJump() end)
+    createFeatureButton(tabContents["Jogador"], "Invisível: OFF", function() F.player.toggleInvisible() end)
   end
   if F.world then
-    button("Brilho Total: OFF", function()
-      F.world.toggleFullBright()
-    end)
-    button("Raio-X: OFF", function()
-      F.world.toggleXray()
-    end)
+    createFeatureButton(tabContents["Mundo"], "Brilho Total: OFF", function() F.world.toggleFullBright() end)
+    createFeatureButton(tabContents["Mundo"], "Raio-X: OFF", function() F.world.toggleXray() end)
   end
   if F.stick then
-    button("Grudar (Seat/Weld)", function()
-      F.stick.stickToMouseTarget()
-    end)
-    button("Soltar", function()
-      F.stick.unstick()
-    end)
+    createFeatureButton(tabContents["Mundo"], "Grudar (Seat/Weld)", function() F.stick.stickToMouseTarget() end)
+    createFeatureButton(tabContents["Mundo"], "Soltar", function() F.stick.unstick() end)
   end
 end
 
