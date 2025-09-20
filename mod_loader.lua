@@ -80,7 +80,7 @@ local SOURCE = {
   infinitejump = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/infinitejump.lua",
   fullbright = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/fullbright.lua",
   nofalldamage = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/nofalldamage.lua",
-  xray = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/xray.lua",
+  xray = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/xray.lua",
   esp = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/esp.lua",
   lowgravity = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/lowgravity.lua",
 }
