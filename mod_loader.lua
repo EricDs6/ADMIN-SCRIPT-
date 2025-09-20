@@ -58,5 +58,10 @@ local Features = {
 
 env.FK7.Features = Features
 
+-- Setup dos módulos que precisam do Core
+pcall(function()
+  if Features.fly and Features.fly.setup then Features.fly.setup(Core) end
+end)
+
 UI.init({ core = Core, features = Features })
 print("[FK7] Loader pronto")
