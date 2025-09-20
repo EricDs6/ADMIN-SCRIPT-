@@ -167,15 +167,28 @@ UI.init({ core = Core, features = Features })
 
 -- Animação de saída da tela de carregamento
 local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local tween = TweenService:Create(loadingUI.container, tweenInfo, {BackgroundTransparency = 1})
-tween:Play()
+
+-- Animar o fundo da tela
+local backgroundTween = TweenService:Create(loadingUI.gui.Frame, tweenInfo, {BackgroundTransparency = 1})
+backgroundTween:Play()
+
+-- Animar o container principal
+local containerTween = TweenService:Create(loadingUI.container, tweenInfo, {BackgroundTransparency = 1})
+containerTween:Play()
+
+-- Animar todos os elementos filhos
 for _, child in ipairs(loadingUI.container:GetChildren()) do
     if child:IsA("GuiObject") then
-        TweenService:Create(child, tweenInfo, {TextTransparency = 1, BackgroundTransparency = 1}):Play()
+        local childTween = TweenService:Create(child, tweenInfo, {
+            TextTransparency = 1, 
+            BackgroundTransparency = 1
+        })
+        childTween:Play()
     end
 end
 
-tween.Completed:Wait()
+-- Aguardar a animação terminar e destruir a GUI
+containerTween.Completed:Wait()
 loadingUI.gui:Destroy()
 
 print("[FK7] Loader pronto")
