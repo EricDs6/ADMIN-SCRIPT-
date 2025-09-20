@@ -225,6 +225,18 @@ function UI.init(ctx)
         end
     end)
 
+    -- Botão de No Fall Damage
+    create_button("🛡️ No Fall Damage", function(btn)
+        local enabled = ctx.features.nofalldamage.toggle()
+        if enabled then
+            btn.Text = "🛡️ No Fall Damage (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(70, 120, 90)
+        else
+            btn.Text = "🛡️ No Fall Damage (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
     -- Atualizar CanvasSize
     content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end

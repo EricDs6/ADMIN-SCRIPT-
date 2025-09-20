@@ -79,6 +79,7 @@ local SOURCE = {
   godmode = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/godmode.lua",
   infinitejump = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/infinitejump.lua",
   fullbright = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/fullbright.lua",
+  nofalldamage = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/nofalldamage.lua",
 }
 
 local function http_get(url)
@@ -87,7 +88,7 @@ local function http_get(url)
   return game:HttpGet(finalUrl)
 end
 
-local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright"}
+local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright", "nofalldamage"}
 local total_modules = #modules_to_load
 local loaded_count = 0
 
@@ -154,6 +155,7 @@ local Features = {
   godmode = load_module("godmode"),
   infinitejump = load_module("infinitejump"),
   fullbright = load_module("fullbright"),
+  nofalldamage = load_module("nofalldamage"),
 }
 env.FK7.Features = Features
 
