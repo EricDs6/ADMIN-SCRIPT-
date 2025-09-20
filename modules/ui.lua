@@ -189,6 +189,42 @@ function UI.init(ctx)
         end
     end)
 
+    -- Botão de God Mode
+    create_button("❤️ God Mode", function(btn)
+        local enabled = ctx.features.godmode.toggle()
+        if enabled then
+            btn.Text = "❤️ God Mode (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(70, 120, 90)
+        else
+            btn.Text = "❤️ God Mode (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Infinite Jump
+    create_button("👟 Infinite Jump", function(btn)
+        local enabled = ctx.features.infinitejump.toggle()
+        if enabled then
+            btn.Text = "👟 Infinite Jump (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(70, 120, 90)
+        else
+            btn.Text = "👟 Infinite Jump (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Full Bright
+    create_button("💡 Full Bright", function(btn)
+        local enabled = ctx.features.fullbright.toggle()
+        if enabled then
+            btn.Text = "💡 Full Bright (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(70, 120, 90)
+        else
+            btn.Text = "💡 Full Bright (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
     -- Atualizar CanvasSize
     content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end
