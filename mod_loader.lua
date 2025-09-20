@@ -13,8 +13,14 @@ local SOURCE = {
   stick = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/stick.lua",
 }
 
+local function normalize_url(url)
+  -- Converte /refs/heads/<branch>/ em /<branch>/ para raw.githubusercontent.com
+  return (url:gsub("/refs/heads/([^/]+)/", "/%1/"))
+end
+
 local function http_get(url)
-  return game:HttpGet(url)
+  local u = normalize_url(url)
+  return game:HttpGet(u)
 end
 
 local function load_module(name)
@@ -44,10 +50,12 @@ env.FK7 = env.FK7 or {}
 
 -- Carregar módulos-base primeiro
 local Core = load_module("core")
-local UI = load_module("ui")
 
--- Registrar Core no ambiente
+-- Registrar Core no ambiente ANTES de carregar a UI (UI pode depender de FK7.Core)
 env.FK7.Core = Core
+
+-- Agora carregar a UI
+local UI = load_module("ui")
 
 -- Carregar módulos de features
 local Features = {
