@@ -1,106 +1,105 @@
--- modules/ui.lua - Interface Premium FK7 Admin
+-- modules/ui.lua - Interface Moderna FK7 Admin v3.0
 local UI = {}
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
--- Animações e efeitos visuais
+-- Cores do tema moderno
+local COLORS = {
+    background = Color3.fromRGB(24, 25, 28),
+    surface = Color3.fromRGB(32, 34, 37),
+    surface_light = Color3.fromRGB(40, 42, 46),
+    primary = Color3.fromRGB(88, 166, 255),
+    primary_dark = Color3.fromRGB(70, 140, 220),
+    success = Color3.fromRGB(76, 175, 80),
+    error = Color3.fromRGB(244, 67, 54),
+    warning = Color3.fromRGB(255, 193, 7),
+    text_primary = Color3.fromRGB(255, 255, 255),
+    text_secondary = Color3.fromRGB(158, 158, 158),
+    border = Color3.fromRGB(60, 63, 65)
+}
+
+-- Função para animações suaves
+local function smooth_tween(object, properties, duration, style)
+    duration = duration or 0.3
+    style = style or Enum.EasingStyle.Quart
+    return TweenService:Create(object, TweenInfo.new(duration, style), properties)
+end
+
+-- Animações e efeitos visuais modernos
 local function animate_button_hover(button, hoverColor, originalColor)
     button.MouseEnter:Connect(function()
-        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = hoverColor,
-            Size = UDim2.new(1, 0, 0, 38)
-        })
-        tween:Play()
+        smooth_tween(button, {BackgroundColor3 = hoverColor}):Play()
     end)
     
     button.MouseLeave:Connect(function()
-        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = originalColor,
-            Size = UDim2.new(1, 0, 0, 35)
-        })
-        tween:Play()
+        smooth_tween(button, {BackgroundColor3 = originalColor}):Play()
     end)
 end
 
-local function pulse_effect(element, color)
-    local pulse = TweenService:Create(element, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-        BackgroundColor3 = color
-    })
-    return pulse
-end
-
--- Função para criar interface arrastável com animação
-local function create_draggable(gui)
-    local is_dragging = false
-    local drag_start
-    local frame_start
-    local original_transparency = gui.BackgroundTransparency
-
-    gui.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            is_dragging = true
-            drag_start = input.Position
-            frame_start = gui.Parent.Position
-            
-            -- Efeito visual ao começar a arrastar
-            local tween = TweenService:Create(gui, TweenInfo.new(0.2), {
-                BackgroundTransparency = 0.1
-            })
-            tween:Play()
-        end
-    end)
-
-    gui.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            is_dragging = false
-            
-            -- Restaurar transparência
-            local tween = TweenService:Create(gui, TweenInfo.new(0.2), {
-                BackgroundTransparency = original_transparency
-            })
-            tween:Play()
-        end
-    end)
-
-    gui.InputChanged:Connect(function(input)
-        if is_dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - drag_start
-            gui.Parent.Position = UDim2.new(frame_start.X.Scale, frame_start.X.Offset + delta.X, frame_start.Y.Scale, frame_start.Y.Offset + delta.Y)
-        end
-    end)
-end
-
--- Criar separador visual
-local function create_separator(parent, text)
-    local separator = Instance.new("Frame")
-    separator.Size = UDim2.new(1, 0, 0, 30)
-    separator.BackgroundTransparency = 1
-    separator.Parent = parent
+-- Sistema de arrastar melhorado
+local function make_draggable(frame, dragHandle)
+    local isDragging = false
+    local dragStart, startPos
     
-    local line1 = Instance.new("Frame", separator)
-    line1.Size = UDim2.new(0.3, 0, 0, 2)
-    line1.Position = UDim2.new(0, 0, 0.5, -1)
-    line1.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
-    line1.BorderSizePixel = 0
-    Instance.new("UICorner", line1).CornerRadius = UDim.new(0, 1)
+    dragHandle = dragHandle or frame
     
-    local label = Instance.new("TextLabel", separator)
-    label.Size = UDim2.new(0.4, 0, 1, 0)
-    label.Position = UDim2.new(0.3, 0, 0, 0)
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            smooth_tween(frame, {Size = frame.Size + UDim2.fromOffset(4, 4)}):Play()
+        end
+    end)
+    
+    dragHandle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+            smooth_tween(frame, {Size = frame.Size - UDim2.fromOffset(4, 4)}):Play()
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.fromOffset(
+                startPos.X.Offset + delta.X,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Criar tooltip moderno
+local function create_tooltip(parent)
+    local tooltip = Instance.new("Frame")
+    tooltip.Name = "Tooltip"
+    tooltip.Size = UDim2.fromOffset(200, 35)
+    tooltip.BackgroundColor3 = COLORS.surface
+    tooltip.BorderSizePixel = 0
+    tooltip.ZIndex = 1000
+    tooltip.Visible = false
+    tooltip.Parent = parent
+    
+    local corner = Instance.new("UICorner", tooltip)
+    corner.CornerRadius = UDim.new(0, 8)
+    
+    local stroke = Instance.new("UIStroke", tooltip)
+    stroke.Color = COLORS.border
+    stroke.Thickness = 1
+    
+    local label = Instance.new("TextLabel", tooltip)
+    label.Size = UDim2.new(1, -16, 1, 0)
+    label.Position = UDim2.fromOffset(8, 0)
     label.BackgroundTransparency = 1
-    label.Text = text
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 12
-    label.TextColor3 = Color3.fromRGB(150, 150, 150)
-    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 13
+    label.TextColor3 = COLORS.text_primary
+    label.TextXAlignment = Enum.TextXAlignment.Left
     
-    local line2 = Instance.new("Frame", separator)
-    line2.Size = UDim2.new(0.3, 0, 0, 2)
-    line2.Position = UDim2.new(0.7, 0, 0.5, -1)
-    line2.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
-    line2.BorderSizePixel = 0
-    Instance.new("UICorner", line2).CornerRadius = UDim.new(0, 1)
-    
-    return separator
+    return tooltip, label
 end
 
 function UI.init(ctx)
@@ -108,477 +107,554 @@ function UI.init(ctx)
     local st = Core.state()
     local playerGui = st.player:WaitForChild("PlayerGui")
 
-    -- Remover GUI antiga se existir
+    -- Remover GUI antiga
     if playerGui:FindFirstChild("FK7_GUI") then
         playerGui.FK7_GUI:Destroy()
     end
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "FK7_GUI"
-    gui.ResetOnSpawn = false
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.Parent = playerGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "FK7_GUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = playerGui
 
-    -- Fundo blur (efeito de profundidade)
-    local blurFrame = Instance.new("Frame")
-    blurFrame.Size = UDim2.new(0, 340, 0, 520)
-    blurFrame.Position = UDim2.new(0, 40, 0.5, -260)
-    blurFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    blurFrame.BackgroundTransparency = 0.8
-    blurFrame.BorderSizePixel = 0
-    blurFrame.Parent = gui
-    Instance.new("UICorner", blurFrame).CornerRadius = UDim.new(0, 16)
-
-    -- Frame principal com glassmorphism
+    -- Frame principal moderno
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 350, 0, 530)
-    mainFrame.Position = UDim2.new(0, 35, 0.5, -265)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 18, 25)
-    mainFrame.BackgroundTransparency = 0.1
+    mainFrame.Size = UDim2.fromOffset(420, 520)
+    mainFrame.Position = UDim2.new(0.5, -210, 0.5, -260)
+    mainFrame.BackgroundColor3 = COLORS.background
     mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = gui
-
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 18)
+    mainFrame.Parent = screenGui
     
-    -- Borda com gradiente animado
-    local stroke = Instance.new("UIStroke", mainFrame)
-    stroke.Color = Color3.fromRGB(100, 180, 255)
-    stroke.Thickness = 3
-    stroke.Transparency = 0.2
+    local mainCorner = Instance.new("UICorner", mainFrame)
+    mainCorner.CornerRadius = UDim.new(0, 16)
     
-    -- Gradiente principal
-    local mainGradient = Instance.new("UIGradient", mainFrame)
-    mainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 30, 45)),
-        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(20, 25, 35)),
-        ColorSequenceKeypoint.new(0.7, Color3.fromRGB(15, 20, 30)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 15, 25))
-    }
-    mainGradient.Rotation = 135
-
-    -- Efeito de brilho no topo
-    local glowEffect = Instance.new("Frame", mainFrame)
-    glowEffect.Size = UDim2.new(1, 0, 0, 100)
-    glowEffect.Position = UDim2.new(0, 0, 0, 0)
-    glowEffect.BackgroundTransparency = 0.9
-    glowEffect.BorderSizePixel = 0
-    glowEffect.ZIndex = mainFrame.ZIndex + 1
+    local mainStroke = Instance.new("UIStroke", mainFrame)
+    mainStroke.Color = COLORS.border
+    mainStroke.Thickness = 1
     
-    local glowGradient = Instance.new("UIGradient", glowEffect)
-    glowGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 18, 25))
-    }
-    glowGradient.Rotation = 90
-    Instance.new("UICorner", glowEffect).CornerRadius = UDim.new(0, 18)
+    -- Sombra sutil
+    local shadow = Instance.new("ImageLabel", screenGui)
+    shadow.Size = mainFrame.Size + UDim2.fromOffset(40, 40)
+    shadow.Position = mainFrame.Position - UDim2.fromOffset(20, 20)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://8560915132" -- Shadow texture
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ZIndex = -1
 
-    -- Cabeçalho premium
-    local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 60)
-    header.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
-    header.BackgroundTransparency = 0.3
+    -- Cabeçalho limpo
+    local header = Instance.new("Frame", mainFrame)
+    header.Size = UDim2.new(1, 0, 0, 50)
+    header.BackgroundColor3 = COLORS.surface
     header.BorderSizePixel = 0
-    header.Parent = mainFrame
-    header.ZIndex = mainFrame.ZIndex + 2
-    create_draggable(header)
+    
+    local headerCorner = Instance.new("UICorner", header)
+    headerCorner.CornerRadius = UDim.new(0, 16)
+    
+    make_draggable(mainFrame, header)
+    
+    -- Máscara para manter cantos arredondados
+    local headerMask = Instance.new("Frame", header)
+    headerMask.Size = UDim2.new(1, 0, 0, 20)
+    headerMask.Position = UDim2.new(0, 0, 1, -20)
+    headerMask.BackgroundColor3 = COLORS.surface
+    headerMask.BorderSizePixel = 0
 
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 18)
-
-    local headerGradient = Instance.new("UIGradient", header)
-    headerGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 140, 255)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(60, 120, 200)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 80, 160))
-    }
-    headerGradient.Rotation = 45
-
-    -- Logo e título melhorados
+    -- Logo e título simplificados
     local logoIcon = Instance.new("TextLabel", header)
-    logoIcon.Size = UDim2.new(0, 40, 0, 40)
-    logoIcon.Position = UDim2.new(0, 15, 0.5, -20)
+    logoIcon.Size = UDim2.fromOffset(32, 32)
+    logoIcon.Position = UDim2.fromOffset(16, 9)
     logoIcon.BackgroundTransparency = 1
-    logoIcon.Text = "🚀"
+    logoIcon.Text = "⚡"
     logoIcon.Font = Enum.Font.GothamBold
-    logoIcon.TextSize = 24
-    logoIcon.TextColor3 = Color3.new(1, 1, 1)
+    logoIcon.TextSize = 18
+    logoIcon.TextColor3 = COLORS.primary
 
     local title = Instance.new("TextLabel", header)
-    title.Size = UDim2.new(1, -150, 1, 0)
-    title.Position = UDim2.new(0, 60, 0, 0)
+    title.Size = UDim2.new(1, -120, 1, 0)
+    title.Position = UDim2.fromOffset(56, 0)
     title.BackgroundTransparency = 1
-    title.Text = "FK7 ADMIN"
+    title.Text = "FK7 Admin"
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 22
-    title.TextColor3 = Color3.new(1, 1, 1)
+    title.TextSize = 16
+    title.TextColor3 = COLORS.text_primary
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.TextStrokeTransparency = 0.5
-    title.TextStrokeColor3 = Color3.new(0, 0, 0)
 
-    local subtitle = Instance.new("TextLabel", header)
-    subtitle.Size = UDim2.new(1, -150, 0, 15)
-    subtitle.Position = UDim2.new(0, 60, 1, -18)
-    subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Premium Edition v2.0"
-    subtitle.Font = Enum.Font.Gotham
-    subtitle.TextSize = 10
-    subtitle.TextColor3 = Color3.fromRGB(200, 220, 255)
-    subtitle.TextXAlignment = Enum.TextXAlignment.Left
-    subtitle.TextTransparency = 0.3
+    -- Botões de controle modernos
+    local buttonContainer = Instance.new("Frame", header)
+    buttonContainer.Size = UDim2.fromOffset(70, 30)
+    buttonContainer.Position = UDim2.new(1, -85, 0.5, -15)
+    buttonContainer.BackgroundTransparency = 1
+    
+    local buttonLayout = Instance.new("UIListLayout", buttonContainer)
+    buttonLayout.FillDirection = Enum.FillDirection.Horizontal
+    buttonLayout.Padding = UDim.new(0, 8)
+    
+    local function create_control_button(text, color, callback)
+        local btn = Instance.new("TextButton", buttonContainer)
+        btn.Size = UDim2.fromOffset(30, 30)
+        btn.BackgroundColor3 = color
+        btn.Text = text
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 12
+        btn.TextColor3 = COLORS.text_primary
+        btn.BorderSizePixel = 0
+        
+        local corner = Instance.new("UICorner", btn)
+        corner.CornerRadius = UDim.new(0, 8)
+        
+        animate_button_hover(btn, Color3.new(
+            math.min(color.R + 0.1, 1),
+            math.min(color.G + 0.1, 1),
+            math.min(color.B + 0.1, 1)
+        ), color)
+        
+        btn.MouseButton1Click:Connect(callback)
+        return btn
+    end
 
-    -- Botões de controle melhorados
-    local minimizeButton = Instance.new("TextButton", header)
-    minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-    minimizeButton.Position = UDim2.new(1, -75, 0.5, -15)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 193, 7)
-    minimizeButton.Text = "—"
-    minimizeButton.Font = Enum.Font.GothamBold
-    minimizeButton.TextSize = 14
-    minimizeButton.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 6)
+    local minimizeBtn = create_control_button("−", COLORS.warning, function()
+        local isMinimized = mainFrame.Size.Y.Offset <= 60
+        local targetSize = isMinimized and UDim2.fromOffset(420, 520) or UDim2.fromOffset(420, 50)
+        smooth_tween(mainFrame, {Size = targetSize}, 0.4):Play()
+    end)
 
-    local closeButton = Instance.new("TextButton", header)
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -38, 0.5, -15)
-    closeButton.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
-    closeButton.Text = "✕"
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 14
-    closeButton.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
-
-    -- Animação dos botões de controle
-    animate_button_hover(minimizeButton, Color3.fromRGB(255, 213, 47), Color3.fromRGB(255, 193, 7))
-    animate_button_hover(closeButton, Color3.fromRGB(240, 73, 89), Color3.fromRGB(220, 53, 69))
-
-    closeButton.MouseButton1Click:Connect(function()
-        -- Animação de saída
-        local closeTween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            BackgroundTransparency = 1
-        })
+    local closeBtn = create_control_button("✕", COLORS.error, function()
+        local closeTween = smooth_tween(mainFrame, {
+            Size = UDim2.fromOffset(0, 0),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        }, 0.3)
         closeTween:Play()
         
         closeTween.Completed:Connect(function()
             if ctx.core and ctx.core.shutdown then
                 ctx.core.shutdown()
             end
-            gui:Destroy()
+            screenGui:Destroy()
         end)
     end)
 
-    -- Container de conteúdo com scroll customizado
-    local content = Instance.new("ScrollingFrame", mainFrame)
-    content.Size = UDim2.new(1, -20, 1, -80)
-    content.Position = UDim2.new(0, 10, 0, 70)
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
-    content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    content.ScrollBarThickness = 6
-    content.ScrollBarImageColor3 = Color3.fromRGB(100, 180, 255)
-    content.ScrollBarImageTransparency = 0.2
-    content.ScrollingDirection = Enum.ScrollingDirection.Y
-    content.ZIndex = mainFrame.ZIndex + 1
+    -- Container principal com abas
+    local body = Instance.new("Frame", mainFrame)
+    body.Size = UDim2.new(1, 0, 1, -50)
+    body.Position = UDim2.fromOffset(0, 50)
+    body.BackgroundTransparency = 1
+
+    -- Sistema de abas lateral
+    local tabContainer = Instance.new("Frame", body)
+    tabContainer.Size = UDim2.fromOffset(110, 1)
+    tabContainer.BackgroundColor3 = COLORS.surface
+    tabContainer.BorderSizePixel = 0
     
-    -- Layout com padding melhorado
-    local layout = Instance.new("UIListLayout", content)
-    layout.Padding = UDim.new(0, 6)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    local tabLayout = Instance.new("UIListLayout", tabContainer)
+    tabLayout.Padding = UDim.new(0, 4)
+    tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    local tabPadding = Instance.new("UIPadding", tabContainer)
+    tabPadding.PaddingTop = UDim.new(0, 12)
+    tabPadding.PaddingLeft = UDim.new(0, 8)
+    tabPadding.PaddingRight = UDim.new(0, 8)
+    
+    -- Painel de informações do usuário
+    local userPanel = Instance.new("Frame", tabContainer)
+    userPanel.Size = UDim2.new(1, 0, 0, 65)
+    userPanel.BackgroundColor3 = COLORS.surface_light
+    userPanel.LayoutOrder = -1
+    
+    local userCorner = Instance.new("UICorner", userPanel)
+    userCorner.CornerRadius = UDim.new(0, 8)
+    
+    local userName = Instance.new("TextLabel", userPanel)
+    userName.Size = UDim2.new(1, -12, 0, 20)
+    userName.Position = UDim2.fromOffset(6, 6)
+    userName.BackgroundTransparency = 1
+    userName.Text = st.player.Name
+    userName.Font = Enum.Font.GothamBold
+    userName.TextSize = 12
+    userName.TextColor3 = COLORS.text_primary
+    userName.TextXAlignment = Enum.TextXAlignment.Left
+    userName.TextTruncate = Enum.TextTruncate.AtEnd
+    
+    local fpsLabel = Instance.new("TextLabel", userPanel)
+    fpsLabel.Size = UDim2.new(1, -12, 0, 16)
+    fpsLabel.Position = UDim2.fromOffset(6, 26)
+    fpsLabel.BackgroundTransparency = 1
+    fpsLabel.Text = "FPS: --"
+    fpsLabel.Font = Enum.Font.Gotham
+    fpsLabel.TextSize = 10
+    fpsLabel.TextColor3 = COLORS.text_secondary
+    fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local pingLabel = Instance.new("TextLabel", userPanel)
+    pingLabel.Size = UDim2.new(1, -12, 0, 16)
+    pingLabel.Position = UDim2.fromOffset(6, 42)
+    pingLabel.BackgroundTransparency = 1
+    pingLabel.Text = "Ping: --"
+    pingLabel.Font = Enum.Font.Gotham
+    pingLabel.TextSize = 10
+    pingLabel.TextColor3 = COLORS.text_secondary
+    pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Atualizar FPS e Ping
+    local lastUpdate = 0
+    RunService.Heartbeat:Connect(function()
+        if tick() - lastUpdate > 0.5 then
+            lastUpdate = tick()
+            local fps = math.floor(1 / RunService.Heartbeat:Wait())
+            fpsLabel.Text = "FPS: " .. fps
+            
+            local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+            pingLabel.Text = "Ping: " .. ping
+        end
+    end)
 
-    -- Padding interno
-    local padding = Instance.new("UIPadding", content)
-    padding.PaddingLeft = UDim.new(0, 5)
-    padding.PaddingRight = UDim.new(0, 5)
-    padding.PaddingTop = UDim.new(0, 10)
-    padding.PaddingBottom = UDim.new(0, 10)
+    -- Container de conteúdo
+    local contentContainer = Instance.new("Frame", body)
+    contentContainer.Size = UDim2.new(1, -110, 1, 0)
+    contentContainer.Position = UDim2.fromOffset(110, 0)
+    contentContainer.BackgroundTransparency = 1
 
-    -- Função para criar botões premium
-    local function create_button(text, callback, category)
+    -- Sistema de tooltip
+    local tooltip, tooltipLabel = create_tooltip(screenGui)
+
+    local pages = {}
+    local tabs = {}
+    local activeTab = nil
+
+    -- Função para criar abas
+    local function create_tab(name, icon, order)
+        local tab = Instance.new("TextButton")
+        tab.Size = UDim2.new(1, 0, 0, 36)
+        tab.BackgroundColor3 = COLORS.surface
+        tab.Text = ""
+        tab.LayoutOrder = order
+        tab.Parent = tabContainer
+        
+        local tabCorner = Instance.new("UICorner", tab)
+        tabCorner.CornerRadius = UDim.new(0, 8)
+        
+        local tabIcon = Instance.new("TextLabel", tab)
+        tabIcon.Size = UDim2.fromOffset(20, 20)
+        tabIcon.Position = UDim2.fromOffset(8, 8)
+        tabIcon.BackgroundTransparency = 1
+        tabIcon.Text = icon
+        tabIcon.Font = Enum.Font.GothamBold
+        tabIcon.TextSize = 14
+        tabIcon.TextColor3 = COLORS.text_secondary
+        
+        local tabText = Instance.new("TextLabel", tab)
+        tabText.Size = UDim2.new(1, -36, 1, 0)
+        tabText.Position = UDim2.fromOffset(32, 0)
+        tabText.BackgroundTransparency = 1
+        tabText.Text = name
+        tabText.Font = Enum.Font.GothamMedium
+        tabText.TextSize = 11
+        tabText.TextColor3 = COLORS.text_secondary
+        tabText.TextXAlignment = Enum.TextXAlignment.Left
+        
+        local page = Instance.new("ScrollingFrame")
+        page.Size = UDim2.new(1, -16, 1, -16)
+        page.Position = UDim2.fromOffset(8, 8)
+        page.BackgroundTransparency = 1
+        page.BorderSizePixel = 0
+        page.CanvasSize = UDim2.fromOffset(0, 0)
+        page.ScrollBarThickness = 4
+        page.ScrollBarImageColor3 = COLORS.primary
+        page.Visible = false
+        page.Parent = contentContainer
+        
+        local pageLayout = Instance.new("UIListLayout", page)
+        pageLayout.Padding = UDim.new(0, 6)
+        pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        
+        pages[name] = page
+        tabs[name] = {button = tab, icon = tabIcon, text = tabText}
+        
+        tab.MouseButton1Click:Connect(function()
+            if activeTab == name then return end
+            
+            -- Desativar aba anterior
+            if activeTab then
+                local oldTab = tabs[activeTab]
+                smooth_tween(oldTab.button, {BackgroundColor3 = COLORS.surface}):Play()
+                smooth_tween(oldTab.icon, {TextColor3 = COLORS.text_secondary}):Play()
+                smooth_tween(oldTab.text, {TextColor3 = COLORS.text_secondary}):Play()
+                pages[activeTab].Visible = false
+            end
+            
+            -- Ativar nova aba
+            activeTab = name
+            smooth_tween(tab, {BackgroundColor3 = COLORS.primary}):Play()
+            smooth_tween(tabIcon, {TextColor3 = COLORS.text_primary}):Play()
+            smooth_tween(tabText, {TextColor3 = COLORS.text_primary}):Play()
+            page.Visible = true
+        end)
+        
+        return page
+    end
+
+    -- Função para criar botões modernos
+    local function create_feature_button(parent, text, description, callback)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 40)
-        btn.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+        btn.Size = UDim2.new(1, 0, 0, 48)
+        btn.BackgroundColor3 = COLORS.surface
         btn.Text = ""
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 14
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Parent = content
-        btn.ZIndex = content.ZIndex + 1
-
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+        btn.Parent = parent
+        
+        local btnCorner = Instance.new("UICorner", btn)
+        btnCorner.CornerRadius = UDim.new(0, 10)
         
         local btnStroke = Instance.new("UIStroke", btn)
-        btnStroke.Color = Color3.fromRGB(60, 70, 90)
+        btnStroke.Color = COLORS.border
         btnStroke.Thickness = 1
         btnStroke.Transparency = 0.5
-
-        -- Gradiente do botão
-        local btnGradient = Instance.new("UIGradient", btn)
-        btnGradient.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 40, 55)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 30, 45))
-        }
-        btnGradient.Rotation = 90
-
-        -- Label do texto
+        
         local textLabel = Instance.new("TextLabel", btn)
-        textLabel.Size = UDim2.new(1, -50, 1, 0)
-        textLabel.Position = UDim2.new(0, 45, 0, 0)
+        textLabel.Size = UDim2.new(1, -60, 0, 20)
+        textLabel.Position = UDim2.fromOffset(16, 8)
         textLabel.BackgroundTransparency = 1
         textLabel.Text = text
-        textLabel.Font = Enum.Font.GothamSemibold
+        textLabel.Font = Enum.Font.GothamMedium
         textLabel.TextSize = 14
-        textLabel.TextColor3 = Color3.new(1, 1, 1)
+        textLabel.TextColor3 = COLORS.text_primary
         textLabel.TextXAlignment = Enum.TextXAlignment.Left
-        textLabel.ZIndex = btn.ZIndex + 1
-
-        -- Status indicator
+        
+        local descLabel = Instance.new("TextLabel", btn)
+        descLabel.Size = UDim2.new(1, -60, 0, 16)
+        descLabel.Position = UDim2.fromOffset(16, 26)
+        descLabel.BackgroundTransparency = 1
+        descLabel.Text = description
+        descLabel.Font = Enum.Font.Gotham
+        descLabel.TextSize = 11
+        descLabel.TextColor3 = COLORS.text_secondary
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
         local indicator = Instance.new("Frame", btn)
-        indicator.Size = UDim2.new(0, 6, 0, 6)
-        indicator.Position = UDim2.new(1, -20, 0.5, -3)
-        indicator.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
+        indicator.Size = UDim2.fromOffset(12, 12)
+        indicator.Position = UDim2.new(1, -28, 0.5, -6)
+        indicator.BackgroundColor3 = COLORS.error
         indicator.BorderSizePixel = 0
-        indicator.ZIndex = btn.ZIndex + 1
-        Instance.new("UICorner", indicator).CornerRadius = UDim.new(0, 3)
-
-        -- Ícone categorial
-        local icon = Instance.new("TextLabel", btn)
-        icon.Size = UDim2.new(0, 30, 0, 30)
-        icon.Position = UDim2.new(0, 8, 0.5, -15)
-        icon.BackgroundTransparency = 1
-        icon.Text = text:match("^[^%s]+") -- Pega o primeiro emoji
-        icon.Font = Enum.Font.GothamBold
-        icon.TextSize = 16
-        icon.TextColor3 = Color3.new(1, 1, 1)
-        icon.ZIndex = btn.ZIndex + 1
-
-        -- Animações do botão
-        animate_button_hover(btn, Color3.fromRGB(45, 50, 70), Color3.fromRGB(30, 35, 50))
-
-        -- Efeito de clique com tratamento de erro
-        btn.MouseButton1Click:Connect(function()
-            local clickEffect = TweenService:Create(btn, TweenInfo.new(0.1), {
-                Size = UDim2.new(1, -4, 0, 36)
-            })
-            clickEffect:Play()
-            
-            clickEffect.Completed:Connect(function()
-                local returnEffect = TweenService:Create(btn, TweenInfo.new(0.1), {
-                    Size = UDim2.new(1, 0, 0, 40)
-                })
-                returnEffect:Play()
-            end)
-            
-            -- Executar callback com tratamento de erro
-            local success, result = pcall(callback, btn, indicator, textLabel)
-            if not success then
-                warn("[FK7] Erro ao executar comando:", result)
-                textLabel.Text = text .. " (ERRO)"
-                indicator.BackgroundColor3 = Color3.fromRGB(255, 193, 7) -- Amarelo para erro
-                task.wait(2)
-                textLabel.Text = text
-                indicator.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
+        
+        local indicatorCorner = Instance.new("UICorner", indicator)
+        indicatorCorner.CornerRadius = UDim.new(0, 6)
+        
+        -- Animações de hover
+        animate_button_hover(btn, COLORS.surface_light, COLORS.surface)
+        
+        -- Mostrar tooltip
+        btn.MouseEnter:Connect(function()
+            tooltipLabel.Text = description
+            tooltip.Visible = true
+        end)
+        
+        btn.MouseLeave:Connect(function()
+            tooltip.Visible = false
+        end)
+        
+        -- Posicionar tooltip
+        UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement and tooltip.Visible then
+                local mouse = UserInputService:GetMouseLocation()
+                tooltip.Position = UDim2.fromOffset(mouse.X + 16, mouse.Y - 40)
             end
         end)
-
+        
+        btn.MouseButton1Click:Connect(function()
+            local success, result = pcall(callback, btn, indicator, textLabel)
+            if not success then
+                warn("[FK7] Erro:", result)
+                smooth_tween(indicator, {BackgroundColor3 = COLORS.warning}):Play()
+                task.wait(1.5)
+                smooth_tween(indicator, {BackgroundColor3 = COLORS.error}):Play()
+            end
+        end)
+        
         return btn, indicator, textLabel
     end
 
-    -- Função para atualizar status do botão
-    local function update_button_status(button, indicator, textLabel, enabled, originalText)
+    local function update_button_status(indicator, textLabel, enabled, originalText)
         if enabled then
+            smooth_tween(indicator, {BackgroundColor3 = COLORS.success}):Play()
             textLabel.Text = originalText .. " (ON)"
-            indicator.BackgroundColor3 = Color3.fromRGB(40, 167, 69)
-            button.BackgroundColor3 = Color3.fromRGB(25, 60, 35)
-            
-            -- Efeito de pulso para botões ativos
-            local pulse = pulse_effect(indicator, Color3.fromRGB(60, 200, 90))
-            pulse:Play()
         else
-            textLabel.Text = originalText .. " (OFF)"
-            indicator.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
-            button.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+            smooth_tween(indicator, {BackgroundColor3 = COLORS.error}):Play()
+            textLabel.Text = originalText
         end
     end
 
-    -- Categorias de recursos
-    create_separator(content, "MOVEMENT")
+    -- Criar páginas/abas
+    local movementPage = create_tab("Movimento", "🏃", 1)
+    local combatPage = create_tab("Combate", "⚔️", 2)
+    local visualPage = create_tab("Visual", "👁️", 3)
+    local worldPage = create_tab("Mundo", "🌍", 4)
+    local autoPage = create_tab("Auto", "⚙️", 5)
 
-    create_button("✈️ Voo Avançado", function(btn, indicator, textLabel)
+    -- Página Movimento
+    create_feature_button(movementPage, "Fly", "Voe livremente pelo mapa", function(btn, indicator, label)
         if ctx.features.fly and ctx.features.fly.toggle then
             local enabled = ctx.features.fly.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "✈️ Voo Avançado")
+            update_button_status(indicator, label, enabled, "Fly")
         else
             error("Módulo fly não encontrado")
         end
     end)
 
-    create_button("👻 Noclip", function(btn, indicator, textLabel)
+    create_feature_button(movementPage, "Noclip", "Atravesse paredes e objetos sólidos", function(btn, indicator, label)
         if ctx.features.noclip and ctx.features.noclip.toggle then
             local enabled = ctx.features.noclip.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "👻 Noclip")
+            update_button_status(indicator, label, enabled, "Noclip")
         else
             error("Módulo noclip não encontrado")
         end
     end)
 
-    create_button("⚡ Velocidade", function(btn, indicator, textLabel)
+    create_feature_button(movementPage, "Speed", "Aumente sua velocidade de movimento", function(btn, indicator, label)
         if ctx.features.speed and ctx.features.speed.toggle then
             local enabled = ctx.features.speed.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "⚡ Velocidade")
+            update_button_status(indicator, label, enabled, "Speed")
         else
             error("Módulo speed não encontrado")
         end
     end)
 
-    create_button("👟 Pulo Infinito", function(btn, indicator, textLabel)
+    create_feature_button(movementPage, "Infinite Jump", "Pule infinitas vezes no ar", function(btn, indicator, label)
         if ctx.features.infinitejump and ctx.features.infinitejump.toggle then
             local enabled = ctx.features.infinitejump.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "👟 Pulo Infinito")
+            update_button_status(indicator, label, enabled, "Infinite Jump")
         else
             error("Módulo infinitejump não encontrado")
         end
     end)
 
-    create_separator(content, "TELEPORT")
-
-    create_button("🎯 Click Teleport", function(btn, indicator, textLabel)
-        if ctx.features.teleport and ctx.features.teleport.toggle then
-            local enabled = ctx.features.teleport.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🎯 Click Teleport")
-        else
-            error("Módulo teleport não encontrado")
-        end
-    end)
-
-    create_button("🌟 TP Profissional", function(btn, indicator, textLabel)
+    create_feature_button(movementPage, "Click Teleport", "Teleporte clicando no mapa", function(btn, indicator, label)
         if ctx.features.clicktp and ctx.features.clicktp.toggle then
             local enabled = ctx.features.clicktp.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🌟 TP Profissional")
+            update_button_status(indicator, label, enabled, "Click Teleport")
         else
             error("Módulo clicktp não encontrado")
         end
     end)
 
-    create_separator(content, "COMBAT")
-
-    create_button("❤️ Modo Deus", function(btn, indicator, textLabel)
+    -- Página Combate
+    create_feature_button(combatPage, "God Mode", "Torna você imortal", function(btn, indicator, label)
         if ctx.features.godmode and ctx.features.godmode.toggle then
             local enabled = ctx.features.godmode.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "❤️ Modo Deus")
+            update_button_status(indicator, label, enabled, "God Mode")
         else
             error("Módulo godmode não encontrado")
         end
     end)
 
-    create_button("🛡️ Sem Dano de Queda", function(btn, indicator, textLabel)
+    create_feature_button(combatPage, "No Fall Damage", "Remove danos de queda", function(btn, indicator, label)
         if ctx.features.nofalldamage and ctx.features.nofalldamage.toggle then
             local enabled = ctx.features.nofalldamage.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🛡️ Sem Dano de Queda")
+            update_button_status(indicator, label, enabled, "No Fall Damage")
         else
             error("Módulo nofalldamage não encontrado")
         end
     end)
 
-    create_separator(content, "VISUAL")
-
-    create_button("💡 Luz Máxima", function(btn, indicator, textLabel)
+    -- Página Visual
+    create_feature_button(visualPage, "Full Bright", "Ilumina completamente o ambiente", function(btn, indicator, label)
         if ctx.features.fullbright and ctx.features.fullbright.toggle then
             local enabled = ctx.features.fullbright.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "💡 Luz Máxima")
+            update_button_status(indicator, label, enabled, "Full Bright")
         else
             error("Módulo fullbright não encontrado")
         end
     end)
 
-    create_button("👁️ Visão de Raio-X", function(btn, indicator, textLabel)
+    create_feature_button(visualPage, "X-Ray", "Veja através de paredes", function(btn, indicator, label)
         if ctx.features.xray and ctx.features.xray.toggle then
             local enabled = ctx.features.xray.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "👁️ Visão de Raio-X")
+            update_button_status(indicator, label, enabled, "X-Ray")
         else
             error("Módulo xray não encontrado")
         end
     end)
 
-    create_button("📡 ESP Players", function(btn, indicator, textLabel)
+    create_feature_button(visualPage, "ESP", "Mostra informações de outros jogadores", function(btn, indicator, label)
         if ctx.features.esp and ctx.features.esp.toggle then
             local enabled = ctx.features.esp.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "📡 ESP Players")
+            update_button_status(indicator, label, enabled, "ESP")
         else
             error("Módulo esp não encontrado")
         end
     end)
 
-    create_separator(content, "WORLD")
-
-    create_button("🪐 Gravidade Baixa", function(btn, indicator, textLabel)
+    -- Página Mundo
+    create_feature_button(worldPage, "Low Gravity", "Reduz a gravidade do jogo", function(btn, indicator, label)
         if ctx.features.lowgravity and ctx.features.lowgravity.toggle then
             local enabled = ctx.features.lowgravity.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🪐 Gravidade Baixa")
+            update_button_status(indicator, label, enabled, "Low Gravity")
         else
             error("Módulo lowgravity não encontrado")
         end
     end)
 
-    create_button("🚪 Atravessar Paredes", function(btn, indicator, textLabel)
+    create_feature_button(worldPage, "Walk Through", "Atravesse objetos específicos", function(btn, indicator, label)
         if ctx.features.walkthrough and ctx.features.walkthrough.toggle then
             local enabled = ctx.features.walkthrough.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🚪 Atravessar Paredes")
+            update_button_status(indicator, label, enabled, "Walk Through")
         else
             error("Módulo walkthrough não encontrado")
         end
     end)
 
-    create_separator(content, "AUTOMATION")
-
-    create_button("💰 Farm Automático", function(btn, indicator, textLabel)
+    -- Página Automação
+    create_feature_button(autoPage, "Auto Farm", "Coleta recursos automaticamente", function(btn, indicator, label)
         if ctx.features.autofarm and ctx.features.autofarm.toggle then
             local enabled = ctx.features.autofarm.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "💰 Farm Automático")
+            update_button_status(indicator, label, enabled, "Auto Farm")
         else
             error("Módulo autofarm não encontrado")
         end
     end)
 
-    create_button("🦘 Pulo Automático", function(btn, indicator, textLabel)
+    create_feature_button(autoPage, "Auto Jump", "Pula obstáculos automaticamente", function(btn, indicator, label)
         if ctx.features.autojump and ctx.features.autojump.toggle then
             local enabled = ctx.features.autojump.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "🦘 Pulo Automático")
+            update_button_status(indicator, label, enabled, "Auto Jump")
         else
             error("Módulo autojump não encontrado")
         end
     end)
 
-    create_button("⚡ Respawn Instantâneo", function(btn, indicator, textLabel)
+    create_feature_button(autoPage, "Instant Respawn", "Renascimento instantâneo", function(btn, indicator, label)
         if ctx.features.instantrespawn and ctx.features.instantrespawn.toggle then
             local enabled = ctx.features.instantrespawn.toggle()
-            update_button_status(btn, indicator, textLabel, enabled, "⚡ Respawn Instantâneo")
+            update_button_status(indicator, label, enabled, "Instant Respawn")
         else
             error("Módulo instantrespawn não encontrado")
         end
     end)
 
-    -- Atualizar CanvasSize dinamicamente
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
-    end)
-    
-    -- Atualização inicial
-    content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    -- Atualizar tamanho do conteúdo das páginas
+    for _, page in pairs(pages) do
+        local layout = page:FindFirstChild("UIListLayout")
+        if layout then
+            layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                page.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 16)
+            end)
+            page.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 16)
+        end
+    end
+
+    -- Ativar primeira aba por padrão
+    tabs["Movimento"].button.MouseButton1Click:Invoke()
 
     -- Animação de entrada
-    mainFrame.Size = UDim2.new(0, 0, 0, 0)
+    mainFrame.Size = UDim2.fromOffset(0, 0)
     mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    mainFrame.BackgroundTransparency = 1
     
-    local openTween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 350, 0, 530),
-        Position = UDim2.new(0, 35, 0.5, -265),
-        BackgroundTransparency = 0.1
-    })
+    local openTween = smooth_tween(mainFrame, {
+        Size = UDim2.fromOffset(420, 520),
+        Position = UDim2.new(0.5, -210, 0.5, -260)
+    }, 0.6, Enum.EasingStyle.Back)
     openTween:Play()
     
-    print("[FK7] Interface Premium carregada com sucesso! 🚀")
+    print("[FK7] Interface moderna carregada! ⚡")
 end
 
 return UI
