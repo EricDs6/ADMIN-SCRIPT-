@@ -273,6 +273,18 @@ function UI.init(ctx)
         end
     end)
 
+    -- Botão de Instant Respawn
+    create_button("⚡ Instant Respawn", function(btn)
+        local enabled = ctx.features.instantrespawn.toggle()
+        if enabled then
+            btn.Text = "⚡ Instant Respawn (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(120, 80, 60)
+        else
+            btn.Text = "⚡ Instant Respawn (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
     -- Atualizar CanvasSize
     content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end

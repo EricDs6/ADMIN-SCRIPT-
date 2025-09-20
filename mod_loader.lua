@@ -83,6 +83,7 @@ local SOURCE = {
   xray = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/xray.lua",
   esp = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/esp.lua",
   lowgravity = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/lowgravity.lua",
+  instantrespawn = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/instantrespawn.lua",
 }
 
 local function http_get(url)
@@ -91,7 +92,7 @@ local function http_get(url)
   return game:HttpGet(finalUrl)
 end
 
-local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright", "nofalldamage", "xray", "esp", "lowgravity"}
+local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright", "nofalldamage", "xray", "esp", "lowgravity", "instantrespawn"}
 local total_modules = #modules_to_load
 local loaded_count = 0
 
@@ -162,6 +163,7 @@ local Features = {
   xray = load_module("xray"),
   esp = load_module("esp"),
   lowgravity = load_module("lowgravity"),
+  instantrespawn = load_module("instantrespawn"),
 }
 env.FK7.Features = Features
 
