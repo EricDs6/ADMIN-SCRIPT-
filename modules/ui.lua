@@ -17,72 +17,149 @@ function UI.init(ctx)
   screenGui.Parent = playerGui
 
   local frame = Instance.new("Frame")
-  frame.Size = UDim2.new(0, 260, 0, 420)
-  frame.Position = UDim2.new(0, 20, 0.5, -210)
-  frame.BackgroundColor3 = Color3.fromRGB(25, 28, 40)
+  frame.Size = UDim2.new(0, 280, 0, 450)
+  frame.Position = UDim2.new(0, 20, 0.5, -225)
+  frame.BackgroundColor3 = Color3.fromRGB(20, 23, 35)
   frame.BorderSizePixel = 0
   frame.Parent = screenGui
 
+  -- Gradiente para o frame principal
+  local frameGradient = Instance.new("UIGradient")
+  frameGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 28, 40)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 23, 35)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 18, 28))
+  }
+  frameGradient.Rotation = 90
+  frameGradient.Parent = frame
+
+  -- Bordas arredondadas para o frame
+  local frameCorner = Instance.new("UICorner")
+  frameCorner.CornerRadius = UDim.new(0, 15)
+  frameCorner.Parent = frame
+
+  -- Borda sutil
+  local frameStroke = Instance.new("UIStroke")
+  frameStroke.Color = Color3.fromRGB(60, 70, 90)
+  frameStroke.Thickness = 1
+  frameStroke.Transparency = 0.8
+  frameStroke.Parent = frame
+
   -- Header
   local header = Instance.new("Frame")
-  header.Size = UDim2.new(1, 0, 0, 40)
+  header.Size = UDim2.new(1, 0, 0, 45)
   header.Position = UDim2.new(0, 0, 0, 0)
-  header.BackgroundColor3 = Color3.fromRGB(35, 40, 55)
+  header.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
   header.BorderSizePixel = 0
   header.Parent = frame
 
+  -- Gradiente para o header
+  local headerGradient = Instance.new("UIGradient")
+  headerGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 150)),
+    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 180, 100)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(100, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 100, 255))
+  }
+  headerGradient.Parent = header
+
+  -- Bordas arredondadas para o header
+  local headerCorner = Instance.new("UICorner")
+  headerCorner.CornerRadius = UDim.new(0, 15)
+  headerCorner.Parent = header
+
+  -- Borda para o header
+  local headerStroke = Instance.new("UIStroke")
+  headerStroke.Color = Color3.fromRGB(80, 90, 120)
+  headerStroke.Thickness = 1.5
+  headerStroke.Transparency = 0.6
+  headerStroke.Parent = header
+
   local headerTitle = Instance.new("TextLabel")
-  headerTitle.Size = UDim2.new(0, 150, 1, 0)
-  headerTitle.Position = UDim2.new(0, 10, 0, 0)
+  headerTitle.Size = UDim2.new(0, 160, 1, 0)
+  headerTitle.Position = UDim2.new(0, 15, 0, 0)
   headerTitle.BackgroundTransparency = 1
-  headerTitle.Text = "FK7 Admin"
+  headerTitle.Text = "FK7 Admin Panel"
   headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
   headerTitle.Font = Enum.Font.GothamBold
-  headerTitle.TextSize = 16
+  headerTitle.TextSize = 18
   headerTitle.TextXAlignment = Enum.TextXAlignment.Left
   headerTitle.Parent = header
 
   local minButton = Instance.new("TextButton")
-  minButton.Size = UDim2.new(0, 30, 0, 30)
-  minButton.Position = UDim2.new(1, -60, 0, 5)
+  minButton.Size = UDim2.new(0, 35, 0, 35)
+  minButton.Position = UDim2.new(1, -75, 0, 5)
   minButton.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
   minButton.Text = "−"
   minButton.TextColor3 = Color3.fromRGB(255, 255, 255)
   minButton.Font = Enum.Font.GothamBold
-  minButton.TextSize = 18
+  minButton.TextSize = 20
+  minButton.AutoButtonColor = false
   minButton.Parent = header
 
+  -- Hover effect para minButton
+  minButton.MouseEnter:Connect(function()
+    minButton.BackgroundColor3 = Color3.fromRGB(70, 75, 90)
+  end)
+  minButton.MouseLeave:Connect(function()
+    minButton.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
+  end)
+
   local closeButton = Instance.new("TextButton")
-  closeButton.Size = UDim2.new(0, 30, 0, 30)
-  closeButton.Position = UDim2.new(1, -30, 0, 5)
+  closeButton.Size = UDim2.new(0, 35, 0, 35)
+  closeButton.Position = UDim2.new(1, -35, 0, 5)
   closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
   closeButton.Text = "×"
   closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
   closeButton.Font = Enum.Font.GothamBold
-  closeButton.TextSize = 18
+  closeButton.TextSize = 20
+  closeButton.AutoButtonColor = false
   closeButton.Parent = header
+
+  -- Hover effect para closeButton
+  closeButton.MouseEnter:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+  end)
+  closeButton.MouseLeave:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+  end)
 
   -- Content Frame
   local contentFrame = Instance.new("Frame")
-  contentFrame.Size = UDim2.new(1, 0, 1, -40)
-  contentFrame.Position = UDim2.new(0, 0, 0, 40)
+  contentFrame.Size = UDim2.new(1, -20, 1, -55)
+  contentFrame.Position = UDim2.new(0, 10, 0, 50)
   contentFrame.BackgroundTransparency = 1
   contentFrame.Parent = frame
 
   local list = Instance.new("UIListLayout")
-  list.Padding = UDim.new(0, 6)
+  list.Padding = UDim.new(0, 8)
+  list.HorizontalAlignment = Enum.HorizontalAlignment.Center
   list.Parent = contentFrame
 
   local function button(text, onClick)
     local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1, -12, 0, 30)
-    b.Position = UDim2.new(0, 6, 0, 0)
+    b.Size = UDim2.new(0, 240, 0, 35)
     b.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
     b.TextColor3 = Color3.fromRGB(240, 240, 255)
     b.Font = Enum.Font.Gotham
     b.TextSize = 14
     b.Text = text
+    b.AutoButtonColor = false
     b.Parent = contentFrame
+
+    -- Bordas arredondadas para botões
+    local bCorner = Instance.new("UICorner")
+    bCorner.CornerRadius = UDim.new(0, 8)
+    bCorner.Parent = b
+
+    -- Hover effect
+    b.MouseEnter:Connect(function()
+      b.BackgroundColor3 = Color3.fromRGB(60, 65, 85)
+    end)
+    b.MouseLeave:Connect(function()
+      b.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+    end)
+
     b.MouseButton1Click:Connect(onClick)
     return b
   end
