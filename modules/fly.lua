@@ -1,51 +1,88 @@
--- modules/fly.lua - voo básico mínimo
-local Fly = { enabled = false }
+-- modules/fly.lua - Sistema de voo
+local Fly = {
+    enabled = false,
+    speed = 50,
+    bodyVelocity = nil,
+    bodyGyro = nil
+}
 
-function Fly.setup(Core)
-    Fly.Core = Core
-    Fly.bv = Instance.new("BodyVelocity")
-    Fly.bv.MaxForce = Vector3.new(4e5, 4e5, 4e5)
-    Fly.bv.Velocity = Vector3.new()
-    Fly.bg = Instance.new("BodyGyro")
-    Fly.bg.MaxTorque = Vector3.new(4e5, 4e5, 4e5)
-    Fly.bg.P = 3000
-    Fly.bg.D = 500
+local Core = require(script.Parent.core)
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
-    Core.onCharacterAdded(function()
-        if Fly.enabled then
-            local st = Core.state()
-            Fly.bv.Parent = st.hrp
-            Fly.bg.Parent = st.hrp
+function Fly.enable()
+    if Fly.enabled then return end
+    Fly.enabled = true
+
+    local st = Core.state()
+    Fly.bodyVelocity = Instance.new("BodyVelocity")
+    Fly.bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+    Fly.bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    Fly.bodyVelocity.Parent = st.humanoidRootPart
+
+    Fly.bodyGyro = Instance.new("BodyGyro")
+    Fly.bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
+    Fly.bodyGyro.P = 3000
+    Fly.bodyGyro.D = 500
+    Fly.bodyGyro.Parent = st.humanoidRootPart
+
+    Fly.connection = RunService.Heartbeat:Connect(function()
+        if not Fly.enabled then return end
+
+        local moveVector = Vector3.new()
+        local camera = workspace.CurrentCamera
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            moveVector = moveVector + camera.CFrame.LookVector
         end
-    end)
-end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            moveVector = moveVector - camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            moveVector = moveVector - camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            moveVector = moveVector + camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            moveVector = moveVector + Vector3.new(0, 1, 0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            moveVector = moveVector - Vector3.new(0, 1, 0)
+        end
 
-function Fly.toggle()
-  local st = Fly.Core.state()
-  Fly.enabled = not Fly.enabled
-  if Fly.enabled then
-    Fly.bv.Parent = st.hrp; Fly.bg.Parent = st.hrp
-    Fly.Core.connect("fly_loop", Fly.Core.services().RunService.RenderStepped:Connect(function()
-      if not Fly.enabled then Fly.Core.disconnect("fly_loop"); return end
-      local uis = Fly.Core.services().UserInputService
-      local dir = Vector3.new()
-      if uis:IsKeyDown(Enum.KeyCode.W) then dir += st.hrp.CFrame.LookVector end
-      if uis:IsKeyDown(Enum.KeyCode.S) then dir -= st.hrp.CFrame.LookVector end
-      if uis:IsKeyDown(Enum.KeyCode.A) then dir -= st.hrp.CFrame.RightVector end
-      if uis:IsKeyDown(Enum.KeyCode.D) then dir += st.hrp.CFrame.RightVector end
-      if uis:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
-      if uis:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
-      Fly.bv.Velocity = dir.Magnitude > 0 and dir.Unit * 60 or Vector3.new()
-      Fly.bg.CFrame = CFrame.new(st.hrp.Position, st.hrp.Position + st.mouse.Hit.LookVector)
-    end))
-  else
-    Fly.Core.disconnect("fly_loop"); Fly.bv.Parent = nil; Fly.bg.Parent = nil
-  end
-  return Fly.enabled
+        Fly.bodyVelocity.Velocity = moveVector * Fly.speed
+        Fly.bodyGyro.CFrame = camera.CFrame
+    end)
+
+    print("[Fly] Ativado - Use WASD + Space/Ctrl para voar")
 end
 
 function Fly.disable()
-  if Fly.enabled then Fly.enabled=false; Fly.Core.disconnect("fly_loop"); Fly.bv.Parent=nil; Fly.bg.Parent=nil end
+    if not Fly.enabled then return end
+    Fly.enabled = false
+
+    if Fly.connection then
+        Fly.connection:Disconnect()
+        Fly.connection = nil
+    end
+
+    if Fly.bodyVelocity then
+        Fly.bodyVelocity:Destroy()
+        Fly.bodyVelocity = nil
+    end
+
+    if Fly.bodyGyro then
+        Fly.bodyGyro:Destroy()
+        Fly.bodyGyro = nil
+    end
+
+    print("[Fly] Desativado")
+end
+
+function Fly.setSpeed(speed)
+    Fly.speed = math.clamp(speed, 10, 500)
+    print("[Fly] Velocidade definida para: " .. Fly.speed)
 end
 
 return Fly

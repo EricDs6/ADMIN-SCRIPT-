@@ -1,35 +1,50 @@
--- modules/speed.lua
-local Speed = { enabled = false, speed = 100 }
+-- modules/speed.lua - Velocidade aumentada
+local Speed = {
+    enabled = false,
+    speed = 100,
+    originalWalkSpeed = nil
+}
 
-function Speed.setup(Core)
-    Speed.Core = Core
-    Core.onCharacterAdded(function()
-        local st = Core.state()
-        Speed.original_speed = st.humanoid.WalkSpeed
-        if Speed.enabled then
-            st.humanoid.WalkSpeed = Speed.speed
-        end
-    end)
-end
+local Core = require(script.Parent.core)
 
-function Speed.toggle()
-    Speed.enabled = not Speed.enabled
-    local st = Speed.Core.state()
+function Speed.enable()
+    if Speed.enabled then return end
+    Speed.enabled = true
 
-    if Speed.enabled then
-        st.humanoid.WalkSpeed = Speed.speed
-    else
-        st.humanoid.WalkSpeed = Speed.original_speed or 16
-    end
-    return Speed.enabled
+    local st = Core.state()
+    local humanoid = st.humanoid
+
+    -- Salvar velocidade original
+    Speed.originalWalkSpeed = humanoid.WalkSpeed
+
+    -- Aplicar velocidade aumentada
+    humanoid.WalkSpeed = Speed.speed
+
+    print("[Speed] Ativado - Velocidade: " .. Speed.speed)
 end
 
 function Speed.disable()
-    if Speed.enabled then
-        Speed.enabled = false
-        local st = Speed.Core.state()
-        st.humanoid.WalkSpeed = Speed.original_speed or 16
+    if not Speed.enabled then return end
+    Speed.enabled = false
+
+    local st = Core.state()
+    local humanoid = st.humanoid
+
+    -- Restaurar velocidade original
+    if Speed.originalWalkSpeed then
+        humanoid.WalkSpeed = Speed.originalWalkSpeed
     end
+
+    print("[Speed] Desativado")
+end
+
+function Speed.setSpeed(speed)
+    Speed.speed = math.clamp(speed, 50, 500)
+    if Speed.enabled then
+        local st = Core.state()
+        st.humanoid.WalkSpeed = Speed.speed
+    end
+    print("[Speed] Velocidade definida para: " .. Speed.speed)
 end
 
 return Speed

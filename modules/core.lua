@@ -1,103 +1,126 @@
--- modules/core.lua - núcleo com gerenciamento de respawn
+-- modules/core.lua - Gerenciador de estado e conexões
 local Core = {}
-
--- Serviços
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-local state = {}
-local character_added_callbacks = {}
-local modules_to_respawn = {}
+local state = {
+    player = Players.LocalPlayer,
+    character = nil,
+    humanoid = nil,
+    humanoidRootPart = nil,
+    connections = {},
+    activeModules = {},
+    originalValues = {}
+}
+
+function Core.state()
+    return state
+end
 
 function Core.init()
-    state.player = Players.LocalPlayer
-    state.mouse = state.player:GetMouse()
+    -- Inicializar estado do jogador
+    state.character = state.player.Character or state.player.CharacterAdded:Wait()
+    state.humanoid = state.character:WaitForChild("Humanoid")
+    state.humanoidRootPart = state.character:WaitForChild("HumanoidRootPart")
 
-    local function on_char(character)
-        if not character then return end
-        state.character = character
-        state.humanoid = character:WaitForChild("Humanoid")
-        state.hrp = character:WaitForChild("HumanoidRootPart")
+    -- Conectar evento de respawn
+    state.connections.characterAdded = state.player.CharacterAdded:Connect(function(newChar)
+        Core.onCharacterRespawn(newChar)
+    end)
 
-        -- Dispara callbacks
-        for _, callback in ipairs(character_added_callbacks) do
-            pcall(callback)
-        end
-        
-        -- Reativa módulos que estavam ativos
-        for module_name, was_enabled in pairs(modules_to_respawn) do
-            if was_enabled and _G.FK7 and _G.FK7.Features and _G.FK7.Features[module_name] then
-                task.wait(0.5) -- Aguarda character estabilizar
-                pcall(function()
-                    if not _G.FK7.Features[module_name].enabled then
-                        _G.FK7.Features[module_name].toggle()
-                    end
-                end)
-            end
+    print("[FK7 Core] Inicializado com sucesso!")
+    return state
+end
+
+function Core.onCharacterRespawn(newChar)
+    -- Atualizar referências
+    state.character = newChar
+    state.humanoid = newChar:WaitForChild("Humanoid")
+    state.humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+
+    -- Reaplicar módulos ativos
+    for moduleName, isEnabled in pairs(state.activeModules) do
+        if isEnabled and Core[moduleName] and Core[moduleName].enable then
+            pcall(function()
+                Core[moduleName].enable()
+            end)
         end
     end
 
-    state.player.CharacterAdded:Connect(on_char)
-    if state.player.Character then
-        on_char(state.player.Character)
+    print("[FK7 Core] Personagem respawnado, módulos reaplicados!")
+end
+
+function Core.registerModule(moduleName, moduleTable)
+    -- Registrar módulo no core
+    Core[moduleName] = moduleTable
+
+    -- Adicionar função toggle se não existir
+    if not moduleTable.toggle then
+        moduleTable.toggle = function()
+            local enabled = not (state.activeModules[moduleName] or false)
+            state.activeModules[moduleName] = enabled
+
+            if enabled then
+                if moduleTable.enable then
+                    pcall(moduleTable.enable)
+                end
+            else
+                if moduleTable.disable then
+                    pcall(moduleTable.disable)
+                end
+            end
+
+            return enabled
+        end
+    end
+
+    print("[FK7 Core] Módulo '" .. moduleName .. "' registrado!")
+end
+
+function Core.connect(eventName, callback)
+    if state.connections[eventName] then
+        state.connections[eventName]:Disconnect()
+    end
+    state.connections[eventName] = callback
+    return state.connections[eventName]
+end
+
+function Core.disconnect(eventName)
+    if state.connections[eventName] then
+        state.connections[eventName]:Disconnect()
+        state.connections[eventName] = nil
     end
 end
 
-function Core.registerForRespawn(module_name, is_enabled)
-    modules_to_respawn[module_name] = is_enabled
+function Core.saveOriginalValue(key, value)
+    state.originalValues[key] = value
+end
+
+function Core.getOriginalValue(key, default)
+    return state.originalValues[key] or default
 end
 
 function Core.shutdown()
-    -- Desativar todos os módulos ativos
-    if _G.FK7 and _G.FK7.Features then
-        for module_name, module in pairs(_G.FK7.Features) do
-            if module and module.enabled and module.disable then
-                pcall(module.disable)
-            end
+    -- Desconectar todos os eventos
+    for name, connection in pairs(state.connections) do
+        if typeof(connection) == "RBXScriptConnection" then
+            connection:Disconnect()
         end
     end
-    
-    -- Limpar todas as conexões
-    Core.cleanup()
-    
-    -- Limpar variáveis globais
-    if _G.FK7 then
-        _G.FK7 = nil
+
+    -- Desabilitar todos os módulos
+    for moduleName, isEnabled in pairs(state.activeModules) do
+        if isEnabled and Core[moduleName] and Core[moduleName].disable then
+            pcall(Core[moduleName].disable)
+        end
     end
-    
-    -- Restaurar configurações do workspace se alteradas
-    pcall(function()
-        workspace.Gravity = 196.2 -- Gravidade padrão
-    end)
-    
-    print("[FK7] Script encerrado e módulos desativados")
+
+    -- Limpar estado
+    state.connections = {}
+    state.activeModules = {}
+    state.originalValues = {}
+
+    print("[FK7 Core] Sistema encerrado!")
 end
 
-function Core.onCharacterAdded(callback)
-    table.insert(character_added_callbacks, callback)
-end
-
-function Core.state()
-  return state
-end
-
-function Core.services()
-  return { Players = Players, UserInputService = UserInputService, RunService = RunService }
-end
-
-local connections = {}
-function Core.connect(key, conn)
-  if connections[key] then pcall(function() connections[key]:Disconnect() end) end
-  connections[key] = conn
-end
-function Core.disconnect(key)
-  if connections[key] then pcall(function() connections[key]:Disconnect() end); connections[key]=nil end
-end
-function Core.cleanup()
-  for k,c in pairs(connections) do pcall(function() c:Disconnect() end) end
-  table.clear(connections)
-end
-
-Core.init()
 return Core

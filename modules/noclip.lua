@@ -1,64 +1,48 @@
--- modules/noclip.lua
-local Noclip = { enabled = false }
+-- modules/noclip.lua - Sistema de noclip
+local Noclip = {
+    enabled = false,
+    connection = nil
+}
 
-function Noclip.setup(Core)
-    Noclip.Core = Core
-    Core.onCharacterAdded(function()
-        if Noclip.enabled then
-            -- Re-ativa o loop de noclip no novo personagem
-            Noclip.Core.disconnect("noclip_loop") -- Garante que não haja loops duplicados
-            local st = Noclip.Core.state()
-            local services = Noclip.Core.services()
-            Noclip.Core.connect("noclip_loop", services.RunService.Stepped:Connect(function()
-                if not st.character then return end
-                for _, part in pairs(st.character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end))
-        end
-    end)
-end
+local Core = require(script.Parent.core)
+local RunService = game:GetService("RunService")
 
-function Noclip.toggle()
-    Noclip.enabled = not Noclip.enabled
-    local st = Noclip.Core.state()
-    local services = Noclip.Core.services()
+function Noclip.enable()
+    if Noclip.enabled then return end
+    Noclip.enabled = true
 
-    if Noclip.enabled then
-        Noclip.Core.connect("noclip_loop", services.RunService.Stepped:Connect(function()
-            if not st.character then return end
-            for _, part in pairs(st.character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end))
-    else
-        Noclip.Core.disconnect("noclip_loop")
-        if not st.character then return end
+    local st = Core.state()
+
+    Noclip.connection = RunService.Stepped:Connect(function()
+        if not Noclip.enabled then return end
+
         for _, part in pairs(st.character:GetChildren()) do
             if part:IsA("BasePart") then
-                part.CanCollide = true
+                part.CanCollide = false
             end
         end
-    end
-    return Noclip.enabled
+    end)
+
+    print("[Noclip] Ativado - Você pode atravessar paredes")
 end
 
 function Noclip.disable()
-    if Noclip.enabled then
-        Noclip.enabled = false
-        Noclip.Core.disconnect("noclip_loop")
-        local st = Noclip.Core.state()
-        if not st.character then return end
-        for _, part in pairs(st.character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
+    if not Noclip.enabled then return end
+    Noclip.enabled = false
+
+    if Noclip.connection then
+        Noclip.connection:Disconnect()
+        Noclip.connection = nil
+    end
+
+    local st = Core.state()
+    for _, part in pairs(st.character:GetChildren()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.CanCollide = true
         end
     end
+
+    print("[Noclip] Desativado")
 end
 
 return Noclip

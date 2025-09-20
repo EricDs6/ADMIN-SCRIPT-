@@ -1,43 +1,38 @@
--- modules/infinitejump.lua
-local InfiniteJump = { enabled = false }
+-- modules/infinitejump.lua - Pulo infinito
+local InfiniteJump = {
+    enabled = false,
+    connection = nil
+}
 
-function InfiniteJump.setup(Core)
-    InfiniteJump.Core = Core
-    Core.onCharacterAdded(function()
+local Core = require(script.Parent.core)
+local UserInputService = game:GetService("UserInputService")
+
+function InfiniteJump.enable()
+    if InfiniteJump.enabled then return end
+    InfiniteJump.enabled = true
+
+    local st = Core.state()
+    local humanoid = st.humanoid
+
+    InfiniteJump.connection = UserInputService.JumpRequest:Connect(function()
         if InfiniteJump.enabled then
-            local services = Core.services()
-            InfiniteJump.Core.connect("infinite_jump", services.UserInputService.JumpRequest:Connect(function()
-                if InfiniteJump.enabled then
-                    local st = Core.state()
-                    st.humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end))
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end)
-end
 
-function InfiniteJump.toggle()
-    InfiniteJump.enabled = not InfiniteJump.enabled
-    local services = InfiniteJump.Core.services()
-
-    if InfiniteJump.enabled then
-        InfiniteJump.Core.connect("infinite_jump", services.UserInputService.JumpRequest:Connect(function()
-            if InfiniteJump.enabled then
-                local st = InfiniteJump.Core.state()
-                st.humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end))
-    else
-        InfiniteJump.Core.disconnect("infinite_jump")
-    end
-    return InfiniteJump.enabled
+    print("[InfiniteJump] Ativado - Pule infinitamente!")
 end
 
 function InfiniteJump.disable()
-    if InfiniteJump.enabled then
-        InfiniteJump.enabled = false
-        InfiniteJump.Core.disconnect("infinite_jump")
+    if not InfiniteJump.enabled then return end
+    InfiniteJump.enabled = false
+
+    if InfiniteJump.connection then
+        InfiniteJump.connection:Disconnect()
+        InfiniteJump.connection = nil
     end
+
+    print("[InfiniteJump] Desativado")
 end
 
 return InfiniteJump

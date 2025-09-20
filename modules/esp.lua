@@ -1,117 +1,114 @@
--- modules/esp.lua - Ver jogadores através de paredes
-local ESP = { enabled = false }
+-- modules/esp.lua - Sistema ESP
+local ESP = {
+    enabled = false,
+    highlights = {},
+    connections = {}
+}
 
-function ESP.setup(Core)
-    ESP.Core = Core
-    ESP.highlights = {}
-end
+local Core = require(script.Parent.core)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-function ESP.createHighlight(player)
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return
+function ESP.enable()
+    if ESP.enabled then return end
+    ESP.enabled = true
+
+    local st = Core.state()
+
+    -- Função para criar ESP para um jogador
+    local function createESP(player)
+        if player == st.player or ESP.highlights[player] then return end
+
+        local character = player.Character
+        if not character then return end
+
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then return end
+
+        -- Criar Highlight
+        local highlight = Instance.new("Highlight")
+        highlight.Adornee = character
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+        highlight.Parent = character
+
+        -- Criar BillboardGui para nome
+        local billboard = Instance.new("BillboardGui")
+        billboard.Adornee = humanoidRootPart
+        billboard.Size = UDim2.new(0, 100, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.Parent = character
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = player.Name
+        nameLabel.TextColor3 = Color3.new(1, 1, 1)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        nameLabel.Font = Enum.Font.SourceSansBold
+        nameLabel.TextSize = 14
+        nameLabel.Parent = billboard
+
+        ESP.highlights[player] = {
+            highlight = highlight,
+            billboard = billboard
+        }
     end
-    
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ESP_Highlight"
-    highlight.Adornee = player.Character
-    highlight.FillColor = player.TeamColor and player.TeamColor.Color or Color3.fromRGB(255, 0, 0)
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
-    highlight.Parent = player.Character
-    
-    -- Adicionar nome acima da cabeça
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "ESP_Name"
-    billboard.Size = UDim2.new(0, 200, 0, 30)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
-    billboard.Parent = player.Character:FindFirstChild("Head")
-    
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = player.Name
-    nameLabel.TextColor3 = Color3.new(1, 1, 1)
-    nameLabel.TextStrokeTransparency = 0
-    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextSize = 16
-    nameLabel.Parent = billboard
-    
-    ESP.highlights[player] = {highlight = highlight, billboard = billboard}
-end
 
-function ESP.removeHighlight(player)
-    if ESP.highlights[player] then
-        if ESP.highlights[player].highlight then
-            ESP.highlights[player].highlight:Destroy()
-        end
-        if ESP.highlights[player].billboard then
-            ESP.highlights[player].billboard:Destroy()
-        end
-        ESP.highlights[player] = nil
+    -- Criar ESP para jogadores existentes
+    for _, player in pairs(Players:GetPlayers()) do
+        createESP(player)
     end
-end
 
-function ESP.toggle()
-    ESP.enabled = not ESP.enabled
-    ESP.Core.registerForRespawn("esp", ESP.enabled)
-    local Players = ESP.Core.services().Players
-    
-    if ESP.enabled then
-        -- Adicionar ESP para todos os jogadores
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer then
-                ESP.createHighlight(player)
-            end
+    -- Conectar eventos para novos jogadores
+    ESP.connections.playerAdded = Players.PlayerAdded:Connect(function(player)
+        if ESP.enabled then
+            createESP(player)
         end
-        
-        -- Conectar eventos para novos jogadores
-        ESP.Core.connect("esp_added", Players.PlayerAdded:Connect(function(player)
-            if ESP.enabled then
-                player.CharacterAdded:Connect(function()
-                    task.wait(1) -- Aguardar character carregar
-                    ESP.createHighlight(player)
-                end)
+    end)
+
+    ESP.connections.playerRemoving = Players.PlayerRemoving:Connect(function(player)
+        if ESP.highlights[player] then
+            if ESP.highlights[player].highlight then
+                ESP.highlights[player].highlight:Destroy()
             end
-        end))
-        
-        ESP.Core.connect("esp_removed", Players.PlayerRemoving:Connect(function(player)
-            ESP.removeHighlight(player)
-        end))
-        
-        -- Monitorar respawns
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer then
-                player.CharacterAdded:Connect(function()
-                    if ESP.enabled then
-                        task.wait(1)
-                        ESP.createHighlight(player)
-                    end
-                end)
+            if ESP.highlights[player].billboard then
+                ESP.highlights[player].billboard:Destroy()
             end
+            ESP.highlights[player] = nil
         end
-    else
-        -- Remover todos os highlights
-        for player, _ in pairs(ESP.highlights) do
-            ESP.removeHighlight(player)
-        end
-        ESP.Core.disconnect("esp_added")
-        ESP.Core.disconnect("esp_removed")
-    end
-    
-    return ESP.enabled
+    end)
+
+    print("[ESP] Ativado - Jogadores visíveis")
 end
 
 function ESP.disable()
-    if ESP.enabled then
-        ESP.enabled = false
-        for player, _ in pairs(ESP.highlights) do
-            ESP.removeHighlight(player)
+    if not ESP.enabled then return end
+    ESP.enabled = false
+
+    -- Desconectar eventos
+    for _, connection in pairs(ESP.connections) do
+        if connection then
+            connection:Disconnect()
         end
-        ESP.Core.disconnect("esp_added")
-        ESP.Core.disconnect("esp_removed")
     end
+    ESP.connections = {}
+
+    -- Remover todos os ESPs
+    for _, espData in pairs(ESP.highlights) do
+        if espData.highlight then
+            espData.highlight:Destroy()
+        end
+        if espData.billboard then
+            espData.billboard:Destroy()
+        end
+    end
+    ESP.highlights = {}
+
+    print("[ESP] Desativado")
 end
 
 return ESP
