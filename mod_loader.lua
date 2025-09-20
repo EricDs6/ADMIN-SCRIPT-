@@ -18,24 +18,31 @@ local function load_module(name)
   print("[FK7] Iniciando carregamento do módulo:", name)
 
   if url and typeof(url) == "string" and url ~= "" then
-    print("[FK7] Tentando URL:", url)
+    -- Cache-busting para evitar CDN servir conteúdo antigo
+    local bust = tostring(os.clock()):gsub("%.", "")
+    local finalUrl = url .. "?t=" .. bust
+    print("[FK7] Tentando URL:", finalUrl)
     local success, src = pcall(function()
-      return game:HttpGet(url)
+      return game:HttpGet(finalUrl)
     end)
 
     if success then
       print("[FK7] HttpGet bem-sucedido para", name, "- Tamanho:", #src)
       if src and src ~= "" then
-        print("[FK7] Conteúdo obtido, executando loadstring...")
-        local ok, mod = pcall(function()
-          return loadstring(src)()
-        end)
-        if ok and mod then
-          print("[FK7] Módulo carregado com sucesso:", name)
-          return mod
-        else
-          warn("[FK7] ERRO no loadstring para", name, "- Erro:", tostring(mod))
+        print("[FK7] Conteúdo obtido, compilando...")
+        local chunk, compileErr = loadstring(src)
+        if not chunk then
+          warn("[FK7] ERRO ao compilar módulo:", name, "- ", tostring(compileErr))
           warn("[FK7] Conteúdo do arquivo (primeiras 200 chars):", src:sub(1, 200))
+        else
+          print("[FK7] Compilação OK, executando chunk...")
+          local ok, mod = pcall(chunk)
+          if ok and mod then
+            print("[FK7] Módulo carregado com sucesso:", name)
+            return mod
+          else
+            warn("[FK7] ERRO ao executar módulo:", name, "- ", tostring(mod))
+          end
         end
       else
         warn("[FK7] Conteúdo vazio retornado para", name)
