@@ -4,43 +4,46 @@
 
 -- Config: defina onde buscar os módulos (urls) ou deixe vazio para usar local
 local SOURCE = {
-  core = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/core.lua",
-  ui = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/ui.lua",
-  fly = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/fly.lua",
-  teleport = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/teleport.lua",
-  player = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/player.lua",
-  world = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/world.lua",
-  stick = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/stick.lua",
+  core = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/core.lua",
+  ui = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/ui.lua",
+  fly = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/fly.lua",
+  teleport = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/teleport.lua",
+  player = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/player.lua",
+  world = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/world.lua",
+  stick = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/stick.lua",
 }
-
-local function normalize_url(url)
-  -- Converte /refs/heads/<branch>/ em /<branch>/ para raw.githubusercontent.com
-  return (url:gsub("/refs/heads/([^/]+)/", "/%1/"))
-end
-
-local function http_get(url)
-  local u = normalize_url(url)
-  return game:HttpGet(u)
-end
 
 local function load_module(name)
   local url = SOURCE[name]
   local ok, mod
   if url and typeof(url) == "string" and url ~= "" then
-    local src = http_get(url)
-    ok, mod = pcall(function()
-      return loadstring(src)()
+    local success, src = pcall(function()
+      return game:HttpGet(url)
     end)
-    if ok and mod then return mod end
-    warn("Falha ao carregar módulo por URL:", name, mod)
+    if success and src and src ~= "" then
+      ok, mod = pcall(function()
+        return loadstring(src)()
+      end)
+      if ok and mod then 
+        print("[FK7] Módulo carregado com sucesso:", name)
+        return mod 
+      end
+      warn("Falha ao executar loadstring para módulo:", name, tostring(mod))
+    else
+      warn("Falha ao obter conteúdo da URL:", name, tostring(src))
+    end
   end
   -- fallback: carregar localmente da pasta modules
+  print("[FK7] Tentando carregar módulo local:", name)
   local success, result = pcall(function()
     local src = readfile and readfile("modules/"..name..".lua")
     if not src then error("Arquivo local ausente: modules/"..name..".lua") end
     return loadstring(src)()
   end)
-  if success then return result end
+  if success then 
+    print("[FK7] Módulo local carregado:", name)
+    return result 
+  end
   error("Não foi possível carregar módulo: "..name.." - "..tostring(result))
 end
 

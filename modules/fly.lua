@@ -22,6 +22,32 @@ local Fly = {
   }
 }
 
+function Fly.setupEffects(st)
+  -- Trail effect para modo Fast
+  local attachment = Instance.new("Attachment")
+  attachment.Name = "FK7_FlyTrail"
+  attachment.Parent = st.hrp
+  
+  local trail = Instance.new("Trail")
+  trail.Attachment0 = attachment
+  trail.Attachment1 = attachment
+  trail.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 150))
+  }
+  trail.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.5),
+    NumberSequenceKeypoint.new(1, 1)
+  }
+  trail.Lifetime = 0.5
+  trail.MinLength = 0
+  trail.Enabled = false
+  trail.Parent = attachment
+  
+  Fly.effects.trail = trail
+  Fly.effects.attachment = attachment
+end
+
 function Fly.setup(Core)
   Fly.Core = Core
   local st = Core.state()
@@ -50,32 +76,6 @@ function Fly.setup(Core)
   
   -- Configurar efeitos visuais
   Fly.setupEffects(st)
-end
-
-function Fly.setupEffects(st)
-  -- Trail effect para modo Fast
-  local attachment = Instance.new("Attachment")
-  attachment.Name = "FK7_FlyTrail"
-  attachment.Parent = st.hrp
-  
-  local trail = Instance.new("Trail")
-  trail.Attachment0 = attachment
-  trail.Attachment1 = attachment
-  trail.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 150))
-  }
-  trail.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.5),
-    NumberSequenceKeypoint.new(1, 1)
-  }
-  trail.Lifetime = 0.5
-  trail.MinLength = 0
-  trail.Enabled = false
-  trail.Parent = attachment
-  
-  Fly.effects.trail = trail
-  Fly.effects.attachment = attachment
 end
 
 function Fly.setMode(newMode)
