@@ -149,20 +149,27 @@ function UI.init(ctx)
   local tabs = {}
   local tabContents = {}
 
-  local function createTab(name, order)
+  local function createTab(name, order, icon)
     local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(0, 80, 1, 0)
+    tabButton.Size = UDim2.new(0, 85, 1, 0)
     tabButton.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
     tabButton.TextColor3 = Color3.fromRGB(200, 200, 220)
     tabButton.Font = Enum.Font.GothamBold
-    tabButton.TextSize = 14
-    tabButton.Text = name
+    tabButton.TextSize = 12
+    tabButton.Text = icon .. " " .. name
     tabButton.LayoutOrder = order
+    tabButton.AutoButtonColor = false
     tabButton.Parent = tabFrame
 
     local tabCorner = Instance.new("UICorner")
     tabCorner.CornerRadius = UDim.new(0, 8)
     tabCorner.Parent = tabButton
+
+    local tabStroke = Instance.new("UIStroke")
+    tabStroke.Color = Color3.fromRGB(60, 70, 90)
+    tabStroke.Thickness = 1
+    tabStroke.Transparency = 0.8
+    tabStroke.Parent = tabButton
 
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, 0, 1, 0)
@@ -170,6 +177,7 @@ function UI.init(ctx)
     content.BorderSizePixel = 0
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
     content.ScrollBarThickness = 6
+    content.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
     content.Visible = false
     content.Parent = contentFrame
 
@@ -178,7 +186,12 @@ function UI.init(ctx)
     list.HorizontalAlignment = Enum.HorizontalAlignment.Center
     list.Parent = content
 
-    tabs[name] = tabButton
+    -- Auto-resize canvas
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+      content.CanvasSize = UDim2.new(0, 0, 0, list.AbsoluteContentSize.Y + 20)
+    end)
+
+    tabs[name] = {button = tabButton, stroke = tabStroke}
     tabContents[name] = content
     return tabButton, content
   end
@@ -187,47 +200,129 @@ function UI.init(ctx)
     for n, c in pairs(tabContents) do
       c.Visible = (n == name)
     end
-    for n, b in pairs(tabs) do
-      b.BackgroundColor3 = (n == name) and Color3.fromRGB(50, 55, 75) or Color3.fromRGB(30, 35, 50)
+    for n, t in pairs(tabs) do
+      if n == name then
+        t.button.BackgroundColor3 = Color3.fromRGB(50, 55, 75)
+        t.stroke.Color = Color3.fromRGB(100, 150, 255)
+        t.stroke.Transparency = 0.4
+      else
+        t.button.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+        t.stroke.Color = Color3.fromRGB(60, 70, 90)
+        t.stroke.Transparency = 0.8
+      end
     end
   end
 
-  createTab("Movimento", 1)
-  createTab("Jogador", 2)
-  createTab("Mundo", 3)
+  createTab("Movimento", 1, "🚀")
+  createTab("Jogador", 2, "👤")
+  createTab("Mundo", 3, "🌍")
 
-  for name, button in pairs(tabs) do
-    button.MouseButton1Click:Connect(function()
+  for name, tabData in pairs(tabs) do
+    tabData.button.MouseButton1Click:Connect(function()
       switchTab(name)
     end)
   end
 
   switchTab("Movimento") -- Aba padrão
 
-  local function createFeatureButton(parent, text, onClick)
+  local function createFeatureButton(parent, text, icon, onClick)
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Size = UDim2.new(0, 240, 0, 40)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+    buttonFrame.Parent = parent
+
+    local bCorner = Instance.new("UICorner")
+    bCorner.CornerRadius = UDim.new(0, 8)
+    bCorner.Parent = buttonFrame
+
+    local bStroke = Instance.new("UIStroke")
+    bStroke.Color = Color3.fromRGB(80, 90, 110)
+    bStroke.Thickness = 1
+    bStroke.Transparency = 0.7
+    bStroke.Parent = buttonFrame
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 30, 1, 0)
+    iconLabel.Position = UDim2.new(0, 8, 0, 0)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon
+    iconLabel.TextColor3 = Color3.fromRGB(100, 150, 255)
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextSize = 18
+    iconLabel.TextXAlignment = Enum.TextXAlignment.Center
+    iconLabel.Parent = buttonFrame
+
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(0, 50, 1, 0)
+    statusLabel.Position = UDim2.new(1, -55, 0, 0)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "OFF"
+    statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    statusLabel.Font = Enum.Font.GothamBold
+    statusLabel.TextSize = 12
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+    statusLabel.Parent = buttonFrame
+
     local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0, 240, 0, 35)
-    b.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+    b.Size = UDim2.new(1, 0, 1, 0)
+    b.Position = UDim2.new(0, 0, 0, 0)
+    b.BackgroundTransparency = 1
     b.TextColor3 = Color3.fromRGB(240, 240, 255)
     b.Font = Enum.Font.Gotham
     b.TextSize = 14
     b.Text = text
+    b.TextXAlignment = Enum.TextXAlignment.Left
     b.AutoButtonColor = false
-    b.Parent = parent
+    b.Parent = buttonFrame
 
-    local bCorner = Instance.new("UICorner")
-    bCorner.CornerRadius = UDim.new(0, 8)
-    bCorner.Parent = b
+    -- Ajustar posição do texto para dar espaço ao ícone
+    local textPadding = Instance.new("UIPadding")
+    textPadding.PaddingLeft = UDim.new(0, 40)
+    textPadding.PaddingRight = UDim.new(0, 60)
+    textPadding.Parent = b
 
+    -- Função para atualizar estado visual
+    local function updateStatus(isOn)
+      if isOn then
+        statusLabel.Text = "ON"
+        statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+        bStroke.Color = Color3.fromRGB(100, 255, 100)
+        iconLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+      else
+        statusLabel.Text = "OFF"
+        statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        bStroke.Color = Color3.fromRGB(80, 90, 110)
+        iconLabel.TextColor3 = Color3.fromRGB(100, 150, 255)
+      end
+    end
+
+    -- Hover effects
     b.MouseEnter:Connect(function()
-      b.BackgroundColor3 = Color3.fromRGB(60, 65, 85)
-    end)
-    b.MouseLeave:Connect(function()
-      b.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+      if statusLabel.Text == "ON" then
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(60, 80, 60)
+      else
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(60, 65, 85)
+      end
     end)
 
-    b.MouseButton1Click:Connect(onClick)
-    return b
+    b.MouseLeave:Connect(function()
+      if statusLabel.Text == "ON" then
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+      else
+        buttonFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+      end
+    end)
+
+    b.MouseButton1Click:Connect(function()
+      local result = onClick()
+      if result ~= nil then
+        updateStatus(result)
+      end
+    end)
+
+    return buttonFrame, updateStatus
   end
 
   -- Drag logic
@@ -298,23 +393,41 @@ function UI.init(ctx)
 
   -- Adicionar botões às abas corretas
   if F.fly then
-    createFeatureButton(tabContents["Movimento"], "Voo: OFF", function() F.fly.toggle() end)
+    createFeatureButton(tabContents["Movimento"], "Voo", "✈️", function() 
+      return F.fly.toggle() 
+    end)
   end
   if F.teleport then
-    createFeatureButton(tabContents["Movimento"], "TP ao Clicar: OFF", function() F.teleport.toggleClickTP() end)
+    createFeatureButton(tabContents["Movimento"], "TP ao Clicar", "📍", function() 
+      return F.teleport.toggleClickTP() 
+    end)
   end
   if F.player then
-    createFeatureButton(tabContents["Jogador"], "Velocidade Hack: OFF", function() F.player.toggleSpeed() end)
-    createFeatureButton(tabContents["Jogador"], "Pulo Hack: OFF", function() F.player.toggleJump() end)
-    createFeatureButton(tabContents["Jogador"], "Invisível: OFF", function() F.player.toggleInvisible() end)
+    createFeatureButton(tabContents["Jogador"], "Velocidade Hack", "⚡", function() 
+      return F.player.toggleSpeed() 
+    end)
+    createFeatureButton(tabContents["Jogador"], "Pulo Hack", "🦘", function() 
+      return F.player.toggleJump() 
+    end)
+    createFeatureButton(tabContents["Jogador"], "Invisível", "👻", function() 
+      return F.player.toggleInvisible() 
+    end)
   end
   if F.world then
-    createFeatureButton(tabContents["Mundo"], "Brilho Total: OFF", function() F.world.toggleFullBright() end)
-    createFeatureButton(tabContents["Mundo"], "Raio-X: OFF", function() F.world.toggleXray() end)
+    createFeatureButton(tabContents["Mundo"], "Brilho Total", "💡", function() 
+      return F.world.toggleFullBright() 
+    end)
+    createFeatureButton(tabContents["Mundo"], "Raio-X", "🔍", function() 
+      return F.world.toggleXray() 
+    end)
   end
   if F.stick then
-    createFeatureButton(tabContents["Mundo"], "Grudar (Seat/Weld)", function() F.stick.stickToMouseTarget() end)
-    createFeatureButton(tabContents["Mundo"], "Soltar", function() F.stick.unstick() end)
+    createFeatureButton(tabContents["Mundo"], "Grudar", "🔗", function() 
+      F.stick.stickToMouseTarget()
+    end)
+    createFeatureButton(tabContents["Mundo"], "Soltar", "🔓", function() 
+      F.stick.unstick()
+    end)
   end
 end
 
