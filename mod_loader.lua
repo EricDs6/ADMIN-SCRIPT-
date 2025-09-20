@@ -4,6 +4,9 @@ local SOURCE = {
   core = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/core.lua",
   ui   = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/ui.lua",
   fly  = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/fly.lua",
+  noclip = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/noclip.lua",
+  speed = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/speed.lua",
+  teleport = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/modules/teleport.lua",
 }
 
 local function http_get(url)
@@ -54,13 +57,20 @@ env.FK7.Core = Core
 local UI = load_module("ui")
 local Features = {
   fly = load_module("fly"),
+  noclip = load_module("noclip"),
+  speed = load_module("speed"),
+  teleport = load_module("teleport"),
 }
 
 env.FK7.Features = Features
 
 -- Setup dos módulos que precisam do Core
 pcall(function()
-  if Features.fly and Features.fly.setup then Features.fly.setup(Core) end
+    for _, feature in pairs(Features) do
+        if feature.setup then
+            feature.setup(Core)
+        end
+    end
 end)
 
 UI.init({ core = Core, features = Features })
