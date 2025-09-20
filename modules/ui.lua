@@ -355,7 +355,7 @@ function UI.init(ctx)
         -- Animações do botão
         animate_button_hover(btn, Color3.fromRGB(45, 50, 70), Color3.fromRGB(30, 35, 50))
 
-        -- Efeito de clique
+        -- Efeito de clique com tratamento de erro
         btn.MouseButton1Click:Connect(function()
             local clickEffect = TweenService:Create(btn, TweenInfo.new(0.1), {
                 Size = UDim2.new(1, -4, 0, 36)
@@ -369,7 +369,16 @@ function UI.init(ctx)
                 returnEffect:Play()
             end)
             
-            callback(btn, indicator, textLabel)
+            -- Executar callback com tratamento de erro
+            local success, result = pcall(callback, btn, indicator, textLabel)
+            if not success then
+                warn("[FK7] Erro ao executar comando:", result)
+                textLabel.Text = text .. " (ERRO)"
+                indicator.BackgroundColor3 = Color3.fromRGB(255, 193, 7) -- Amarelo para erro
+                task.wait(2)
+                textLabel.Text = text
+                indicator.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
+            end
         end)
 
         return btn, indicator, textLabel
@@ -396,93 +405,157 @@ function UI.init(ctx)
     create_separator(content, "MOVEMENT")
 
     create_button("✈️ Voo Avançado", function(btn, indicator, textLabel)
-        local enabled = ctx.features.fly.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "✈️ Voo Avançado")
+        if ctx.features.fly and ctx.features.fly.toggle then
+            local enabled = ctx.features.fly.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "✈️ Voo Avançado")
+        else
+            error("Módulo fly não encontrado")
+        end
     end)
 
     create_button("👻 Noclip", function(btn, indicator, textLabel)
-        local enabled = ctx.features.noclip.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "👻 Noclip")
+        if ctx.features.noclip and ctx.features.noclip.toggle then
+            local enabled = ctx.features.noclip.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "👻 Noclip")
+        else
+            error("Módulo noclip não encontrado")
+        end
     end)
 
     create_button("⚡ Velocidade", function(btn, indicator, textLabel)
-        local enabled = ctx.features.speed.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "⚡ Velocidade")
+        if ctx.features.speed and ctx.features.speed.toggle then
+            local enabled = ctx.features.speed.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "⚡ Velocidade")
+        else
+            error("Módulo speed não encontrado")
+        end
     end)
 
     create_button("👟 Pulo Infinito", function(btn, indicator, textLabel)
-        local enabled = ctx.features.infinitejump.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "👟 Pulo Infinito")
+        if ctx.features.infinitejump and ctx.features.infinitejump.toggle then
+            local enabled = ctx.features.infinitejump.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "👟 Pulo Infinito")
+        else
+            error("Módulo infinitejump não encontrado")
+        end
     end)
 
     create_separator(content, "TELEPORT")
 
     create_button("🎯 Click Teleport", function(btn, indicator, textLabel)
-        local enabled = ctx.features.teleport.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🎯 Click Teleport")
+        if ctx.features.teleport and ctx.features.teleport.toggle then
+            local enabled = ctx.features.teleport.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🎯 Click Teleport")
+        else
+            error("Módulo teleport não encontrado")
+        end
     end)
 
     create_button("🌟 TP Profissional", function(btn, indicator, textLabel)
-        local enabled = ctx.features.clicktp.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🌟 TP Profissional")
+        if ctx.features.clicktp and ctx.features.clicktp.toggle then
+            local enabled = ctx.features.clicktp.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🌟 TP Profissional")
+        else
+            error("Módulo clicktp não encontrado")
+        end
     end)
 
     create_separator(content, "COMBAT")
 
     create_button("❤️ Modo Deus", function(btn, indicator, textLabel)
-        local enabled = ctx.features.godmode.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "❤️ Modo Deus")
+        if ctx.features.godmode and ctx.features.godmode.toggle then
+            local enabled = ctx.features.godmode.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "❤️ Modo Deus")
+        else
+            error("Módulo godmode não encontrado")
+        end
     end)
 
     create_button("🛡️ Sem Dano de Queda", function(btn, indicator, textLabel)
-        local enabled = ctx.features.nofalldamage.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🛡️ Sem Dano de Queda")
+        if ctx.features.nofalldamage and ctx.features.nofalldamage.toggle then
+            local enabled = ctx.features.nofalldamage.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🛡️ Sem Dano de Queda")
+        else
+            error("Módulo nofalldamage não encontrado")
+        end
     end)
 
     create_separator(content, "VISUAL")
 
     create_button("💡 Luz Máxima", function(btn, indicator, textLabel)
-        local enabled = ctx.features.fullbright.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "💡 Luz Máxima")
+        if ctx.features.fullbright and ctx.features.fullbright.toggle then
+            local enabled = ctx.features.fullbright.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "💡 Luz Máxima")
+        else
+            error("Módulo fullbright não encontrado")
+        end
     end)
 
     create_button("👁️ Visão de Raio-X", function(btn, indicator, textLabel)
-        local enabled = ctx.features.xray.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "👁️ Visão de Raio-X")
+        if ctx.features.xray and ctx.features.xray.toggle then
+            local enabled = ctx.features.xray.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "👁️ Visão de Raio-X")
+        else
+            error("Módulo xray não encontrado")
+        end
     end)
 
     create_button("📡 ESP Players", function(btn, indicator, textLabel)
-        local enabled = ctx.features.esp.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "📡 ESP Players")
+        if ctx.features.esp and ctx.features.esp.toggle then
+            local enabled = ctx.features.esp.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "📡 ESP Players")
+        else
+            error("Módulo esp não encontrado")
+        end
     end)
 
     create_separator(content, "WORLD")
 
     create_button("🪐 Gravidade Baixa", function(btn, indicator, textLabel)
-        local enabled = ctx.features.lowgravity.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🪐 Gravidade Baixa")
+        if ctx.features.lowgravity and ctx.features.lowgravity.toggle then
+            local enabled = ctx.features.lowgravity.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🪐 Gravidade Baixa")
+        else
+            error("Módulo lowgravity não encontrado")
+        end
     end)
 
     create_button("🚪 Atravessar Paredes", function(btn, indicator, textLabel)
-        local enabled = ctx.features.walkthrough.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🚪 Atravessar Paredes")
+        if ctx.features.walkthrough and ctx.features.walkthrough.toggle then
+            local enabled = ctx.features.walkthrough.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🚪 Atravessar Paredes")
+        else
+            error("Módulo walkthrough não encontrado")
+        end
     end)
 
     create_separator(content, "AUTOMATION")
 
     create_button("💰 Farm Automático", function(btn, indicator, textLabel)
-        local enabled = ctx.features.autofarm.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "💰 Farm Automático")
+        if ctx.features.autofarm and ctx.features.autofarm.toggle then
+            local enabled = ctx.features.autofarm.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "💰 Farm Automático")
+        else
+            error("Módulo autofarm não encontrado")
+        end
     end)
 
     create_button("🦘 Pulo Automático", function(btn, indicator, textLabel)
-        local enabled = ctx.features.autojump.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "🦘 Pulo Automático")
+        if ctx.features.autojump and ctx.features.autojump.toggle then
+            local enabled = ctx.features.autojump.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "🦘 Pulo Automático")
+        else
+            error("Módulo autojump não encontrado")
+        end
     end)
 
     create_button("⚡ Respawn Instantâneo", function(btn, indicator, textLabel)
-        local enabled = ctx.features.instantrespawn.toggle()
-        update_button_status(btn, indicator, textLabel, enabled, "⚡ Respawn Instantâneo")
+        if ctx.features.instantrespawn and ctx.features.instantrespawn.toggle then
+            local enabled = ctx.features.instantrespawn.toggle()
+            update_button_status(btn, indicator, textLabel, enabled, "⚡ Respawn Instantâneo")
+        else
+            error("Módulo instantrespawn não encontrado")
+        end
     end)
 
     -- Atualizar CanvasSize dinamicamente
