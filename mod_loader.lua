@@ -179,9 +179,22 @@ containerTween:Play()
 
 -- Animar todos os elementos filhos
 for _, child in ipairs(loadingUI.container:GetChildren()) do
-    if child:IsA("GuiObject") then
+    if child:IsA("TextLabel") or child:IsA("TextButton") then
+        -- Para elementos de texto
         local childTween = TweenService:Create(child, tweenInfo, {
             TextTransparency = 1, 
+            BackgroundTransparency = 1
+        })
+        childTween:Play()
+    elseif child:IsA("Frame") then
+        -- Para frames (como a barra de progresso)
+        local childTween = TweenService:Create(child, tweenInfo, {
+            BackgroundTransparency = 1
+        })
+        childTween:Play()
+    elseif child:IsA("GuiObject") then
+        -- Para outros elementos GUI
+        local childTween = TweenService:Create(child, tweenInfo, {
             BackgroundTransparency = 1
         })
         childTween:Play()
