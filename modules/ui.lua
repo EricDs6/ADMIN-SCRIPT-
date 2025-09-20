@@ -23,6 +23,14 @@ function UI.init(ctx)
   frame.BorderSizePixel = 0
   frame.Parent = screenGui
 
+  -- Animação de entrada
+  frame.Position = UDim2.new(0, -300, 0.5, -225) -- Começa fora da tela
+  local tweenService = Core.services().TweenService
+  local entranceTween = tweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+    Position = UDim2.new(0, 20, 0.5, -225)
+  })
+  entranceTween:Play()
+
   -- Gradiente para o frame principal
   local frameGradient = Instance.new("UIGradient")
   frameGradient.Color = ColorSequence.new{
@@ -97,12 +105,28 @@ function UI.init(ctx)
   minButton.AutoButtonColor = false
   minButton.Parent = header
 
-  -- Hover effect para minButton
+  -- Hover effect para minButton com animação
   minButton.MouseEnter:Connect(function()
-    minButton.BackgroundColor3 = Color3.fromRGB(70, 75, 90)
+    local tweenService = Core.services().TweenService
+    local colorTween = tweenService:Create(minButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+      BackgroundColor3 = Color3.fromRGB(70, 75, 90)
+    })
+    local scaleTween = tweenService:Create(minButton, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+      Size = UDim2.new(0, 37, 0, 37)
+    })
+    colorTween:Play()
+    scaleTween:Play()
   end)
   minButton.MouseLeave:Connect(function()
-    minButton.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
+    local tweenService = Core.services().TweenService
+    local colorTween = tweenService:Create(minButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+      BackgroundColor3 = Color3.fromRGB(50, 55, 70)
+    })
+    local scaleTween = tweenService:Create(minButton, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+      Size = UDim2.new(0, 35, 0, 35)
+    })
+    colorTween:Play()
+    scaleTween:Play()
   end)
 
   local closeButton = Instance.new("TextButton")
@@ -116,12 +140,28 @@ function UI.init(ctx)
   closeButton.AutoButtonColor = false
   closeButton.Parent = header
 
-  -- Hover effect para closeButton
+  -- Hover effect para closeButton com animação
   closeButton.MouseEnter:Connect(function()
-    closeButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+    local tweenService = Core.services().TweenService
+    local colorTween = tweenService:Create(closeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+      BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+    })
+    local scaleTween = tweenService:Create(closeButton, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+      Size = UDim2.new(0, 37, 0, 37)
+    })
+    colorTween:Play()
+    scaleTween:Play()
   end)
   closeButton.MouseLeave:Connect(function()
-    closeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    local tweenService = Core.services().TweenService
+    local colorTween = tweenService:Create(closeButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+      BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    })
+    local scaleTween = tweenService:Create(closeButton, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+      Size = UDim2.new(0, 35, 0, 35)
+    })
+    colorTween:Play()
+    scaleTween:Play()
   end)
 
   -- Content Frame
@@ -161,6 +201,33 @@ function UI.init(ctx)
     tabButton.AutoButtonColor = false
     tabButton.Parent = tabFrame
 
+    -- Animação de entrada da aba
+    tabButton.Size = UDim2.new(0, 0, 1, 0)
+    local tweenService = Core.services().TweenService
+    local tabEntranceTween = tweenService:Create(tabButton, TweenInfo.new(0.3 + (order * 0.1), Enum.EasingStyle.Back), {
+      Size = UDim2.new(0, 85, 1, 0)
+    })
+    tabEntranceTween:Play()
+
+    -- Hover effects para abas
+    tabButton.MouseEnter:Connect(function()
+      if tabs[name] and tabs[name].button.BackgroundColor3 ~= Color3.fromRGB(50, 55, 75) then
+        local hoverTween = tweenService:Create(tabButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+        })
+        hoverTween:Play()
+      end
+    end)
+
+    tabButton.MouseLeave:Connect(function()
+      if tabs[name] and tabs[name].button.BackgroundColor3 ~= Color3.fromRGB(50, 55, 75) then
+        local hoverTween = tweenService:Create(tabButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+        })
+        hoverTween:Play()
+      end
+    end)
+
     local tabCorner = Instance.new("UICorner")
     tabCorner.CornerRadius = UDim.new(0, 8)
     tabCorner.Parent = tabButton
@@ -197,18 +264,44 @@ function UI.init(ctx)
   end
 
   local function switchTab(name)
+    -- Animar transição entre abas
     for n, c in pairs(tabContents) do
-      c.Visible = (n == name)
-    end
-    for n, t in pairs(tabs) do
       if n == name then
-        t.button.BackgroundColor3 = Color3.fromRGB(50, 55, 75)
-        t.stroke.Color = Color3.fromRGB(100, 150, 255)
-        t.stroke.Transparency = 0.4
+        c.Visible = true
+        c.Position = UDim2.new(1, 0, 0, 0) -- Começa fora da tela
+        c:TweenPosition(UDim2.new(0, 0, 0, 0), "Out", "Quad", 0.3, true)
       else
-        t.button.BackgroundColor3 = Color3.fromRGB(30, 35, 50)
-        t.stroke.Color = Color3.fromRGB(60, 70, 90)
-        t.stroke.Transparency = 0.8
+        if c.Visible then
+          c:TweenPosition(UDim2.new(-1, 0, 0, 0), "Out", "Quad", 0.2, true, function()
+            c.Visible = false
+          end)
+        end
+      end
+    end
+    
+    -- Animar cores das abas
+    for n, t in pairs(tabs) do
+      local tweenService = Core.services().TweenService
+      if n == name then
+        local colorTween = tweenService:Create(t.button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(50, 55, 75)
+        })
+        local strokeTween = tweenService:Create(t.stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          Color = Color3.fromRGB(100, 150, 255),
+          Transparency = 0.4
+        })
+        colorTween:Play()
+        strokeTween:Play()
+      else
+        local colorTween = tweenService:Create(t.button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(30, 35, 50)
+        })
+        local strokeTween = tweenService:Create(t.stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          Color = Color3.fromRGB(60, 70, 90),
+          Transparency = 0.8
+        })
+        colorTween:Play()
+        strokeTween:Play()
       end
     end
   end
@@ -281,41 +374,105 @@ function UI.init(ctx)
     textPadding.PaddingRight = UDim.new(0, 60)
     textPadding.Parent = b
 
-    -- Função para atualizar estado visual
+    -- Função para atualizar estado visual com animação
     local function updateStatus(isOn)
+      local tweenService = Core.services().TweenService
+      
       if isOn then
         statusLabel.Text = "ON"
-        statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
-        bStroke.Color = Color3.fromRGB(100, 255, 100)
-        iconLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        local statusTween = tweenService:Create(statusLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+          TextColor3 = Color3.fromRGB(100, 255, 100)
+        })
+        local frameTween = tweenService:Create(buttonFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+        })
+        local strokeTween = tweenService:Create(bStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+          Color = Color3.fromRGB(100, 255, 100)
+        })
+        local iconTween = tweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+          TextColor3 = Color3.fromRGB(100, 255, 100)
+        })
+        statusTween:Play()
+        frameTween:Play()
+        strokeTween:Play()
+        iconTween:Play()
       else
         statusLabel.Text = "OFF"
-        statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-        bStroke.Color = Color3.fromRGB(80, 90, 110)
-        iconLabel.TextColor3 = Color3.fromRGB(100, 150, 255)
+        local statusTween = tweenService:Create(statusLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+          TextColor3 = Color3.fromRGB(150, 150, 150)
+        })
+        local frameTween = tweenService:Create(buttonFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        })
+        local strokeTween = tweenService:Create(bStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+          Color = Color3.fromRGB(80, 90, 110)
+        })
+        local iconTween = tweenService:Create(iconLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+          TextColor3 = Color3.fromRGB(100, 150, 255)
+        })
+        statusTween:Play()
+        frameTween:Play()
+        strokeTween:Play()
+        iconTween:Play()
       end
     end
 
-    -- Hover effects
+    -- Hover effects com animação
     b.MouseEnter:Connect(function()
+      local tweenService = Core.services().TweenService
+      local scaleTween = tweenService:Create(buttonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(0, 245, 0, 42)
+      })
+      scaleTween:Play()
+      
       if statusLabel.Text == "ON" then
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(60, 80, 60)
+        local colorTween = tweenService:Create(buttonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(60, 80, 60)
+        })
+        colorTween:Play()
       else
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(60, 65, 85)
+        local colorTween = tweenService:Create(buttonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(60, 65, 85)
+        })
+        colorTween:Play()
       end
     end)
 
     b.MouseLeave:Connect(function()
+      local tweenService = Core.services().TweenService
+      local scaleTween = tweenService:Create(buttonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(0, 240, 0, 40)
+      })
+      scaleTween:Play()
+      
       if statusLabel.Text == "ON" then
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+        local colorTween = tweenService:Create(buttonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+        })
+        colorTween:Play()
       else
-        buttonFrame.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        local colorTween = tweenService:Create(buttonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+          BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        })
+        colorTween:Play()
       end
     end)
 
     b.MouseButton1Click:Connect(function()
+      -- Animação de clique (feedback visual)
+      local tweenService = Core.services().TweenService
+      local clickTween = tweenService:Create(buttonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+        Size = UDim2.new(0, 235, 0, 38)
+      })
+      clickTween:Play()
+      
+      clickTween.Completed:Connect(function()
+        local returnTween = tweenService:Create(buttonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+          Size = UDim2.new(0, 240, 0, 40)
+        })
+        returnTween:Play()
+      end)
+      
       local result = onClick()
       if result ~= nil then
         updateStatus(result)
@@ -351,19 +508,30 @@ function UI.init(ctx)
     end
   end)
 
-  -- Minimize logic
+  -- Minimize logic com animação
   local minimized = false
   minButton.MouseButton1Click:Connect(function()
     minimized = not minimized
+    local tweenService = Core.services().TweenService
+    
     if minimized then
       contentFrame.Visible = false
       tabFrame.Visible = false
-      frame.Size = UDim2.new(0, 280, 0, 45)
+      local sizeTween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+        Size = UDim2.new(0, 280, 0, 45)
+      })
+      sizeTween:Play()
       minButton.Text = "+"
     else
-      contentFrame.Visible = true
-      tabFrame.Visible = true
-      frame.Size = UDim2.new(0, 280, 0, 450)
+      local sizeTween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+        Size = UDim2.new(0, 280, 0, 450)
+      })
+      sizeTween:Play()
+      
+      sizeTween.Completed:Connect(function()
+        contentFrame.Visible = true
+        tabFrame.Visible = true
+      end)
       minButton.Text = "−"
     end
   end)
