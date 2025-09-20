@@ -2,11 +2,22 @@
 local Fly = { enabled = false }
 
 function Fly.setup(Core)
-  Fly.Core = Core
-  local st = Core.state()
-  Fly.bv = Instance.new("BodyVelocity"); Fly.bv.MaxForce = Vector3.new(4e5,4e5,4e5); Fly.bv.Velocity = Vector3.new()
-  Fly.bg = Instance.new("BodyGyro"); Fly.bg.MaxTorque = Vector3.new(4e5,4e5,4e5); Fly.bg.P = 3000; Fly.bg.D = 500
-  Fly.bv.Parent = nil; Fly.bg.Parent = nil
+    Fly.Core = Core
+    Fly.bv = Instance.new("BodyVelocity")
+    Fly.bv.MaxForce = Vector3.new(4e5, 4e5, 4e5)
+    Fly.bv.Velocity = Vector3.new()
+    Fly.bg = Instance.new("BodyGyro")
+    Fly.bg.MaxTorque = Vector3.new(4e5, 4e5, 4e5)
+    Fly.bg.P = 3000
+    Fly.bg.D = 500
+
+    Core.onCharacterAdded(function()
+        if Fly.enabled then
+            local st = Core.state()
+            Fly.bv.Parent = st.hrp
+            Fly.bg.Parent = st.hrp
+        end
+    end)
 end
 
 function Fly.toggle()

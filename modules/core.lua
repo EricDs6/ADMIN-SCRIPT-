@@ -1,4 +1,4 @@
--- modules/core.lua - núcleo mínimo
+-- modules/core.lua - núcleo com gerenciamento de respawn
 local Core = {}
 
 -- Serviços
@@ -7,13 +7,32 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local state = {}
+local character_added_callbacks = {}
 
 function Core.init()
-  state.player = Players.LocalPlayer
-  state.character = state.player.Character or state.player.CharacterAdded:Wait()
-  state.humanoid = state.character:WaitForChild("Humanoid")
-  state.hrp = state.character:WaitForChild("HumanoidRootPart")
-  state.mouse = state.player:GetMouse()
+    state.player = Players.LocalPlayer
+    state.mouse = state.player:GetMouse()
+
+    local function on_char(character)
+        if not character then return end
+        state.character = character
+        state.humanoid = character:WaitForChild("Humanoid")
+        state.hrp = character:WaitForChild("HumanoidRootPart")
+
+        -- Dispara callbacks
+        for _, callback in ipairs(character_added_callbacks) do
+            pcall(callback)
+        end
+    end
+
+    state.player.CharacterAdded:Connect(on_char)
+    if state.player.Character then
+        on_char(state.player.Character)
+    end
+end
+
+function Core.onCharacterAdded(callback)
+    table.insert(character_added_callbacks, callback)
 end
 
 function Core.state()

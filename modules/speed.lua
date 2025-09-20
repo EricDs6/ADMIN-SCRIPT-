@@ -3,8 +3,13 @@ local Speed = { enabled = false, speed = 100 }
 
 function Speed.setup(Core)
     Speed.Core = Core
-    local st = Core.state()
-    Speed.original_speed = st.humanoid.WalkSpeed
+    Core.onCharacterAdded(function()
+        local st = Core.state()
+        Speed.original_speed = st.humanoid.WalkSpeed
+        if Speed.enabled then
+            st.humanoid.WalkSpeed = Speed.speed
+        end
+    end)
 end
 
 function Speed.toggle()
