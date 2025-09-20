@@ -237,6 +237,42 @@ function UI.init(ctx)
         end
     end)
 
+    -- Botão de X-Ray
+    create_button("👁️ X-Ray", function(btn)
+        local enabled = ctx.features.xray.toggle()
+        if enabled then
+            btn.Text = "👁️ X-Ray (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(120, 70, 90)
+        else
+            btn.Text = "👁️ X-Ray (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de ESP
+    create_button("📡 ESP", function(btn)
+        local enabled = ctx.features.esp.toggle()
+        if enabled then
+            btn.Text = "📡 ESP (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(120, 90, 70)
+        else
+            btn.Text = "📡 ESP (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Low Gravity
+    create_button("🪐 Low Gravity", function(btn)
+        local enabled = ctx.features.lowgravity.toggle()
+        if enabled then
+            btn.Text = "🪐 Low Gravity (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(90, 70, 120)
+        else
+            btn.Text = "🪐 Low Gravity (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
     -- Atualizar CanvasSize
     content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end

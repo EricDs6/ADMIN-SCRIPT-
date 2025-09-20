@@ -156,6 +156,9 @@ local Features = {
   infinitejump = load_module("infinitejump"),
   fullbright = load_module("fullbright"),
   nofalldamage = load_module("nofalldamage"),
+  xray = load_module("xray"),
+  esp = load_module("esp"),
+  lowgravity = load_module("lowgravity"),
 }
 env.FK7.Features = Features
 
