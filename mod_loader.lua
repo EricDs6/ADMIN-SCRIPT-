@@ -4,14 +4,13 @@
 
 -- Config: defina onde buscar os módulos (urls) ou deixe vazio para usar local
 local SOURCE = {
-  -- Exemplo:
-  -- core = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/core.lua",
-  -- ui = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/ui.lua",
-  -- fly = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/fly.lua",
-  -- teleport = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/teleport.lua",
-  -- player = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/player.lua",
-  -- world = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/world.lua",
-  -- stick = "https://raw.githubusercontent.com/<user>/<repo>/main/modules/stick.lua",
+  core = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/core.lua",
+  ui = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/ui.lua",
+  fly = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/fly.lua",
+  teleport = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/teleport.lua",
+  player = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/player.lua",
+  world = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/world.lua",
+  stick = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/stick.lua",
 }
 
 local function http_get(url)
