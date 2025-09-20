@@ -36,4 +36,25 @@ function Player.toggleInvisible()
   return Player.invisOn
 end
 
+function Player.disable()
+  local st = Player.Core.state()
+  if Player.speedOn then
+    Player.speedOn = false
+    st.humanoid.WalkSpeed = Player.defaultWalk
+  end
+  if Player.jumpOn then
+    Player.jumpOn = false
+    st.humanoid.JumpPower = Player.defaultJump
+  end
+  if Player.invisOn then
+    Player.invisOn = false
+    for _, p in ipairs(st.character:GetDescendants()) do
+      if p:IsA("BasePart") then
+        p.Transparency = 0
+        if p:FindFirstChildOfClass("Decal") then p:FindFirstChildOfClass("Decal").Transparency = 0 end
+      end
+    end
+  end
+end
+
 return Player

@@ -25,4 +25,11 @@ function TP.toggleClickTP()
   return TP.click
 end
 
+function TP.disable()
+  if TP.click then
+    TP.click = false
+    TP.Core.disconnect("click_tp")
+  end
+end
+
 return TP

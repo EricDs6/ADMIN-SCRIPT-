@@ -50,4 +50,13 @@ function Fly.toggle()
   return Fly.enabled
 end
 
+function Fly.disable()
+  if Fly.enabled then
+    Fly.enabled = false
+    Fly.Core.disconnect("fly_loop")
+    Fly.bv.Parent = nil
+    Fly.bg.Parent = nil
+  end
+end
+
 return Fly

@@ -275,8 +275,17 @@ function UI.init(ctx)
 
   -- Close logic
   closeButton.MouseButton1Click:Connect(function()
+    -- Desligar todas as features antes de fechar
+    local F = (ctx and ctx.features) or (getgenv and getgenv().FK7 and getgenv().FK7.Features) or {}
+    if F.fly and F.fly.disable then F.fly.disable() end
+    if F.teleport and F.teleport.disable then F.teleport.disable() end
+    if F.player and F.player.disable then F.player.disable() end
+    if F.world and F.world.disable then F.world.disable() end
+    if F.stick and F.stick.disable then F.stick.disable() end
+    
     Core.cleanup()
     screenGui:Destroy()
+    print("[FK7] Script encerrado completamente.")
   end)
 
   local F = (ctx and ctx.features) or (getgenv and getgenv().FK7 and getgenv().FK7.Features) or {}

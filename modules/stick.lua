@@ -68,4 +68,8 @@ function Stick.stickToMouseTarget()
   return false
 end
 
+function Stick.disable()
+  clear()
+end
+
 return Stick

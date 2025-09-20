@@ -32,4 +32,20 @@ function World.toggleXray()
   return World.xray
 end
 
+function World.disable()
+  local L = World.Core.services().Lighting
+  if World.bright then
+    World.bright = false
+    L.Brightness = World._store.brightness or 3
+  end
+  if World.xray then
+    World.xray = false
+    for _, p in ipairs(workspace:GetDescendants()) do
+      if p:IsA("BasePart") then
+        p.Transparency = 0
+      end
+    end
+  end
+end
+
 return World
