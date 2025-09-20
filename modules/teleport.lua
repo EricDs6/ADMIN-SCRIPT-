@@ -12,16 +12,15 @@ function TP.toggleClickTP()
   local st = TP.Core.state()
   local uis = TP.Core.services().UserInputService
   if TP.click then
-    if TP.conn then TP.conn:Disconnect() end
-    TP.conn = uis.InputBegan:Connect(function(input, gpe)
-      if gpe then return end
+    TP.Core.connect("click_tp", uis.InputBegan:Connect(function(input, gpe)
+      if gpe or not TP.click then return end
       if input.UserInputType == Enum.UserInputType.MouseButton1 then
         local pos = st.mouse.Hit.Position
         st.hrp.CFrame = CFrame.new(pos + Vector3.new(0,5,0))
       end
-    end)
+    end))
   else
-    if TP.conn then TP.conn:Disconnect(); TP.conn = nil end
+    TP.Core.disconnect("click_tp")
   end
   return TP.click
 end

@@ -26,8 +26,11 @@ function Fly.toggle()
   if Fly.enabled then
     Fly.bv.Parent = st.hrp
     Fly.bg.Parent = st.hrp
-    if Fly.conn then Fly.conn:Disconnect() end
-    Fly.conn = Fly.Core.services().RunService.RenderStepped:Connect(function()
+    Fly.Core.connect("fly_loop", Fly.Core.services().RunService.RenderStepped:Connect(function()
+      if not Fly.enabled then 
+        Fly.Core.disconnect("fly_loop") 
+        return 
+      end
       local dir = Vector3.new()
       local uis = Fly.Core.services().UserInputService
       if uis:IsKeyDown(Enum.KeyCode.W) then dir = dir + st.hrp.CFrame.LookVector end
@@ -38,9 +41,9 @@ function Fly.toggle()
       if uis:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.new(0,1,0) end
       Fly.bv.Velocity = dir.Unit.Magnitude > 0 and dir.Unit * Fly.speed or Vector3.new()
       Fly.bg.CFrame = CFrame.new(st.hrp.Position, st.hrp.Position + st.mouse.Hit.LookVector)
-    end)
+    end))
   else
-    if Fly.conn then Fly.conn:Disconnect(); Fly.conn = nil end
+    Fly.Core.disconnect("fly_loop")
     Fly.bv.Parent = nil
     Fly.bg.Parent = nil
   end

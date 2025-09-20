@@ -275,6 +275,7 @@ function UI.init(ctx)
 
   -- Close logic
   closeButton.MouseButton1Click:Connect(function()
+    Core.cleanup()
     screenGui:Destroy()
   end)
 
