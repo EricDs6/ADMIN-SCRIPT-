@@ -60,6 +60,7 @@ local function create_loading_ui()
 
     return {
         gui = screenGui,
+        background = background,
         status = status,
         bar = barFill,
         container = container
@@ -169,7 +170,7 @@ UI.init({ core = Core, features = Features })
 local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 -- Animar o fundo da tela
-local backgroundTween = TweenService:Create(loadingUI.gui.Frame, tweenInfo, {BackgroundTransparency = 1})
+local backgroundTween = TweenService:Create(loadingUI.background, tweenInfo, {BackgroundTransparency = 1})
 backgroundTween:Play()
 
 -- Animar o container principal
@@ -187,8 +188,10 @@ for _, child in ipairs(loadingUI.container:GetChildren()) do
     end
 end
 
--- Aguardar a animação terminar e destruir a GUI
+-- Aguardar a animação terminar e destruir a GUI completamente
 containerTween.Completed:Wait()
-loadingUI.gui:Destroy()
+if loadingUI.gui and loadingUI.gui.Parent then
+    loadingUI.gui:Destroy()
+end
 
 print("[FK7] Loader pronto")
