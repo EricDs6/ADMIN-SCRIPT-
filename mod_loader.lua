@@ -84,6 +84,10 @@ local SOURCE = {
   esp = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/esp.lua",
   lowgravity = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/lowgravity.lua",
   instantrespawn = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/instantrespawn.lua",
+  clicktp = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/clicktp.lua",
+  autofarm = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/autofarm.lua",
+  walkthrough = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/walkthrough.lua",
+  autojump = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/refs/heads/main/modules/autojump.lua",
 }
 
 local function http_get(url)
@@ -92,7 +96,7 @@ local function http_get(url)
   return game:HttpGet(finalUrl)
 end
 
-local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright", "nofalldamage", "xray", "esp", "lowgravity", "instantrespawn"}
+local modules_to_load = {"core", "ui", "fly", "noclip", "speed", "teleport", "godmode", "infinitejump", "fullbright", "nofalldamage", "xray", "esp", "lowgravity", "instantrespawn", "clicktp", "autofarm", "walkthrough", "autojump"}
 local total_modules = #modules_to_load
 local loaded_count = 0
 
@@ -164,6 +168,10 @@ local Features = {
   esp = load_module("esp"),
   lowgravity = load_module("lowgravity"),
   instantrespawn = load_module("instantrespawn"),
+  clicktp = load_module("clicktp"),
+  autofarm = load_module("autofarm"),
+  walkthrough = load_module("walkthrough"),
+  autojump = load_module("autojump"),
 }
 env.FK7.Features = Features
 

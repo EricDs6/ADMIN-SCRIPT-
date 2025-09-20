@@ -1,7 +1,50 @@
--- modules/ui.lua - Painel moderno e organizado
-local UI = {}
+-- modules/ui.lua - Painel moderno e organizad    -- Frame principal
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 3    -- Container de conteúdo melhorado
+    local content = Instance.new("ScrollingFrame", mainFrame)
+    content.Size = UDim2.new(1, -20, 1, -65)
+    content.Position = UDim2.new(0, 10, 0, 55)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.ScrollBarThickness = 8
+    content.ScrollBarImageColor3 = Color3.fromRGB(60, 120, 220)
+    content.ScrollBarImageTransparency = 0.3
+    content.ScrollingDirection = Enum.ScrollingDirection.Y
+    
+    -- Layout melhorado
+    local layout = Instance.new("UIListLayout", content)
+    layout.Padding = UDim.new(0, 8)
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder -- Aumentado para mais comandos
+    mainFrame.Position = UDim2.new(0, 50, 0.5, -225)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 32)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = gui
 
-local function create_draggable(gui)
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", mainFrame)
+    stroke.Color = Color3.fromRGB(60, 120, 220)
+    stroke.Thickness = 2
+    stroke.Transparency = 0.3
+
+    local mainGradient = Instance.new("UIGradient", mainFrame)
+    mainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 30, 40)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 25, 32)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 28))
+    }
+    mainGradient.Rotation = 45
+
+    -- Efeito de sombra
+    local shadow = Instance.new("ImageLabel", gui)
+    shadow.Size = UDim2.new(1, 8, 1, 8)
+    shadow.Position = UDim2.new(0, -4, 0, -4)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ZIndex = mainFrame.ZIndex - 1local function create_draggable(gui)
     local is_dragging = false
     local drag_start
     local frame_start
@@ -46,60 +89,68 @@ function UI.init(ctx)
 
     -- Painel Principal
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 280, 0, 350)
-    mainFrame.Position = UDim2.new(0, 50, 0.5, -175)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
+    mainFrame.Size = UDim2.new(0, 320, 0, 450)
+    mainFrame.Position = UDim2.new(0, 50, 0.5, -225)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 32)
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = gui
 
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
     local stroke = Instance.new("UIStroke", mainFrame)
-    stroke.Color = Color3.fromRGB(80, 80, 100)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.5
+    stroke.Color = Color3.fromRGB(60, 120, 220)
+    stroke.Thickness = 2
+    stroke.Transparency = 0.3
 
     local mainGradient = Instance.new("UIGradient", mainFrame)
     mainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 40, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 28, 35))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 30, 40)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 25, 32)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 28))
     }
-    mainGradient.Rotation = 90
+    mainGradient.Rotation = 45
 
     -- Cabeçalho
     local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 40)
-    header.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
-    header.BackgroundTransparency = 0.5
+    header.Size = UDim2.new(1, 0, 0, 50)
+    header.BackgroundColor3 = Color3.fromRGB(15, 20, 28)
+    header.BackgroundTransparency = 0.2
     header.BorderSizePixel = 0
     header.Parent = mainFrame
     create_draggable(header)
 
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
+
     local headerGradient = Instance.new("UIGradient", header)
     headerGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 50, 65)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 45, 60))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 120, 220)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(40, 80, 160)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 60, 120))
     }
+    headerGradient.Rotation = 90
 
+    -- Título com estilo melhor
     local title = Instance.new("TextLabel", header)
     title.Size = UDim2.new(1, -80, 1, 0)
     title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
+    title.Text = "🔧 FK7 ADMIN"
     title.Font = Enum.Font.GothamBold
-    title.Text = "FK7 Admin"
+    title.TextSize = 18
     title.TextColor3 = Color3.new(1, 1, 1)
-    title.TextSize = 16
     title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextStrokeTransparency = 0.5
+    title.TextStrokeColor3 = Color3.new(0, 0, 0)
 
-    -- Botão de Fechar
+    -- Botão de Fechar melhorado
     local closeButton = Instance.new("TextButton", header)
-    closeButton.Size = UDim2.new(0, 30, 0, 30)
-    closeButton.Position = UDim2.new(1, -35, 0.5, -15)
-    closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    closeButton.Text = "X"
+    closeButton.Size = UDim2.new(0, 35, 0, 35)
+    closeButton.Position = UDim2.new(1, -42, 0.5, -17)
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    closeButton.Text = "✕"
     closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 14
+    closeButton.TextSize = 16
     closeButton.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 8)
 
     closeButton.MouseButton1Click:Connect(function()
         -- Executar shutdown completo
@@ -288,6 +339,54 @@ function UI.init(ctx)
             btn.BackgroundColor3 = Color3.fromRGB(120, 80, 60)
         else
             btn.Text = "⚡ Instant Respawn (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Click Teleport melhorado
+    create_button("🎯 Click TP Pro", function(btn)
+        local enabled = ctx.features.clicktp.toggle()
+        if enabled then
+            btn.Text = "🎯 Click TP Pro (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(220, 120, 60)
+        else
+            btn.Text = "🎯 Click TP Pro (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Auto Farm
+    create_button("💰 Auto Farm", function(btn)
+        local enabled = ctx.features.autofarm.toggle()
+        if enabled then
+            btn.Text = "💰 Auto Farm (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
+        else
+            btn.Text = "💰 Auto Farm (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Walkthrough Walls
+    create_button("🚪 Walkthrough", function(btn)
+        local enabled = ctx.features.walkthrough.toggle()
+        if enabled then
+            btn.Text = "🚪 Walkthrough (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(160, 80, 200)
+        else
+            btn.Text = "🚪 Walkthrough (OFF)"
+            btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+        end
+    end)
+
+    -- Botão de Auto Jump
+    create_button("🦘 Auto Jump", function(btn)
+        local enabled = ctx.features.autojump.toggle()
+        if enabled then
+            btn.Text = "🦘 Auto Jump (ON)"
+            btn.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
+        else
+            btn.Text = "🦘 Auto Jump (OFF)"
             btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
         end
     end)
