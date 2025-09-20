@@ -1,50 +1,8 @@
--- modules/ui.lua - Painel moderno e organizad    -- Frame principal
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0, 3    -- Container de conteúdo melhorado
-    local content = Instance.new("ScrollingFrame", mainFrame)
-    content.Size = UDim2.new(1, -20, 1, -65)
-    content.Position = UDim2.new(0, 10, 0, 55)
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
-    content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    content.ScrollBarThickness = 8
-    content.ScrollBarImageColor3 = Color3.fromRGB(60, 120, 220)
-    content.ScrollBarImageTransparency = 0.3
-    content.ScrollingDirection = Enum.ScrollingDirection.Y
-    
-    -- Layout melhorado
-    local layout = Instance.new("UIListLayout", content)
-    layout.Padding = UDim.new(0, 8)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder -- Aumentado para mais comandos
-    mainFrame.Position = UDim2.new(0, 50, 0.5, -225)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 32)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = gui
+-- modules/ui.lua - Interface de usuário moderna e organizad
+local UI = {}
 
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
-    local stroke = Instance.new("UIStroke", mainFrame)
-    stroke.Color = Color3.fromRGB(60, 120, 220)
-    stroke.Thickness = 2
-    stroke.Transparency = 0.3
-
-    local mainGradient = Instance.new("UIGradient", mainFrame)
-    mainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 30, 40)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 25, 32)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 28))
-    }
-    mainGradient.Rotation = 45
-
-    -- Efeito de sombra
-    local shadow = Instance.new("ImageLabel", gui)
-    shadow.Size = UDim2.new(1, 8, 1, 8)
-    shadow.Position = UDim2.new(0, -4, 0, -4)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.8
-    shadow.ZIndex = mainFrame.ZIndex - 1local function create_draggable(gui)
+-- Função para criar interface arrastável
+local function create_draggable(gui)
     local is_dragging = false
     local drag_start
     local frame_start
@@ -87,7 +45,7 @@ function UI.init(ctx)
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = playerGui
 
-    -- Painel Principal
+    -- Frame principal
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 320, 0, 450)
     mainFrame.Position = UDim2.new(0, 50, 0.5, -225)
@@ -108,6 +66,16 @@ function UI.init(ctx)
         ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 28))
     }
     mainGradient.Rotation = 45
+
+    -- Efeito de sombra
+    local shadow = Instance.new("ImageLabel", gui)
+    shadow.Size = UDim2.new(1, 8, 1, 8)
+    shadow.Position = UDim2.new(0, -4, 0, -4)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ZIndex = mainFrame.ZIndex - 1
 
     -- Cabeçalho
     local header = Instance.new("Frame")
@@ -164,17 +132,22 @@ function UI.init(ctx)
         print("[FK7] Interface fechada e script encerrado")
     end)
 
-    -- Container de conteúdo
+    -- Container de conteúdo melhorado
     local content = Instance.new("ScrollingFrame", mainFrame)
-    content.Size = UDim2.new(1, -20, 1, -50)
-    content.Position = UDim2.new(0, 10, 0, 45)
+    content.Size = UDim2.new(1, -20, 1, -65)
+    content.Position = UDim2.new(0, 10, 0, 55)
     content.BackgroundTransparency = 1
     content.BorderSizePixel = 0
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    content.ScrollBarThickness = 6
-
+    content.ScrollBarThickness = 8
+    content.ScrollBarImageColor3 = Color3.fromRGB(60, 120, 220)
+    content.ScrollBarImageTransparency = 0.3
+    content.ScrollingDirection = Enum.ScrollingDirection.Y
+    
+    -- Layout melhorado
     local layout = Instance.new("UIListLayout", content)
     layout.Padding = UDim.new(0, 8)
+    layout.FillDirection = Enum.FillDirection.Vertical
     layout.SortOrder = Enum.SortOrder.LayoutOrder
 
     -- Função para criar botões
@@ -199,7 +172,7 @@ function UI.init(ctx)
         return btn
     end
 
-    -- Botão de Voo
+    -- Botões dos recursos
     create_button("✈️ Voo", function(btn)
         local enabled = ctx.features.fly.toggle()
         if enabled then
@@ -211,7 +184,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Noclip
     create_button("👻 Noclip", function(btn)
         local enabled = ctx.features.noclip.toggle()
         if enabled then
@@ -223,7 +195,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Speed
     create_button("⚡ Speed", function(btn)
         local enabled = ctx.features.speed.toggle()
         if enabled then
@@ -235,7 +206,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Teleport
     create_button("🎯 Click TP", function(btn)
         local enabled = ctx.features.teleport.toggle()
         if enabled then
@@ -247,7 +217,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de God Mode
     create_button("❤️ God Mode", function(btn)
         local enabled = ctx.features.godmode.toggle()
         if enabled then
@@ -259,7 +228,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Infinite Jump
     create_button("👟 Infinite Jump", function(btn)
         local enabled = ctx.features.infinitejump.toggle()
         if enabled then
@@ -271,7 +239,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Full Bright
     create_button("💡 Full Bright", function(btn)
         local enabled = ctx.features.fullbright.toggle()
         if enabled then
@@ -283,7 +250,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de No Fall Damage
     create_button("🛡️ No Fall Damage", function(btn)
         local enabled = ctx.features.nofalldamage.toggle()
         if enabled then
@@ -295,7 +261,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de X-Ray
     create_button("👁️ X-Ray", function(btn)
         local enabled = ctx.features.xray.toggle()
         if enabled then
@@ -307,7 +272,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de ESP
     create_button("📡 ESP", function(btn)
         local enabled = ctx.features.esp.toggle()
         if enabled then
@@ -319,7 +283,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Low Gravity
     create_button("🪐 Low Gravity", function(btn)
         local enabled = ctx.features.lowgravity.toggle()
         if enabled then
@@ -331,7 +294,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Instant Respawn
     create_button("⚡ Instant Respawn", function(btn)
         local enabled = ctx.features.instantrespawn.toggle()
         if enabled then
@@ -343,7 +305,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Click Teleport melhorado
     create_button("🎯 Click TP Pro", function(btn)
         local enabled = ctx.features.clicktp.toggle()
         if enabled then
@@ -355,7 +316,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Auto Farm
     create_button("💰 Auto Farm", function(btn)
         local enabled = ctx.features.autofarm.toggle()
         if enabled then
@@ -367,7 +327,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Walkthrough Walls
     create_button("🚪 Walkthrough", function(btn)
         local enabled = ctx.features.walkthrough.toggle()
         if enabled then
@@ -379,7 +338,6 @@ function UI.init(ctx)
         end
     end)
 
-    -- Botão de Auto Jump
     create_button("🦘 Auto Jump", function(btn)
         local enabled = ctx.features.autojump.toggle()
         if enabled then
@@ -391,8 +349,15 @@ function UI.init(ctx)
         end
     end)
 
-    -- Atualizar CanvasSize
+    -- Atualizar CanvasSize baseado no conteúdo
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+    end)
+    
+    -- Atualização inicial
     content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+    
+    print("[FK7] Interface carregada com sucesso!")
 end
 
 return UI
