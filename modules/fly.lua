@@ -1,84 +1,84 @@
 -- modules/fly.lua
--- Sistema de voo avançado com múltiplos modos e controles
+-- Sistema de voo básico e robusto
 
-local Fly = { 
-  enabled = false, 
+local Fly = {
+  enabled = false,
   speed = 60,
-  maxSpeed = 200,
-  minSpeed = 10,
-  currentVelocity = Vector3.new(),
-  acceleration = 0.15,
-  deceleration = 0.85,
-  mode = "Normal", -- Normal, Fast, Stealth
-  modes = {
-    Normal = { speed = 60, accel = 0.15, maxForce = 400000 },
-    Fast = { speed = 120, accel = 0.25, maxForce = 800000 },
-    Stealth = { speed = 25, accel = 0.08, maxForce = 200000 }
-  },
-  hovering = true,
-  effects = {
-    trail = nil,
-    sound = nil
-  }
+  bv = nil,
+  bg = nil
 }
-
-function Fly.setupEffects(st)
-  -- Trail effect para modo Fast
-  local attachment = Instance.new("Attachment")
-  attachment.Name = "FK7_FlyTrail"
-  attachment.Parent = st.hrp
-  
-  local trail = Instance.new("Trail")
-  trail.Attachment0 = attachment
-  trail.Attachment1 = attachment
-  trail.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 150))
-  }
-  trail.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.5),
-    NumberSequenceKeypoint.new(1, 1)
-  }
-  trail.Lifetime = 0.5
-  trail.MinLength = 0
-  trail.Enabled = false
-  trail.Parent = attachment
-  
-  Fly.effects.trail = trail
-  Fly.effects.attachment = attachment
-end
 
 function Fly.setup(Core)
   Fly.Core = Core
   local st = Core.state()
-  
+
   -- Configurar BodyVelocity
   Fly.bv = Instance.new("BodyVelocity")
   Fly.bv.MaxForce = Vector3.new(400000, 400000, 400000)
   Fly.bv.Velocity = Vector3.new()
-  
-  -- Configurar BodyGyro para rotação suave
+
+  -- Configurar BodyGyro
   Fly.bg = Instance.new("BodyGyro")
   Fly.bg.MaxTorque = Vector3.new(400000, 400000, 400000)
   Fly.bg.P = 3000
   Fly.bg.D = 500
-  
-  -- Configurar BodyPosition para hover
-  Fly.bp = Instance.new("BodyPosition")
-  Fly.bp.MaxForce = Vector3.new(400000, 400000, 400000)
-  Fly.bp.P = 10000
-  Fly.bp.D = 1000
-  
+
   -- Inicialmente desabilitados
   Fly.bv.Parent = nil
   Fly.bg.Parent = nil
-  Fly.bp.Parent = nil
-  
-  -- Configurar efeitos visuais
-  Fly.setupEffects(st)
+
+  print("[FK7] Fly module setup completed")
 end
 
-function Fly.setMode(newMode)
+function Fly.toggle()
+  Fly.enabled = not Fly.enabled
+  local st = Fly.Core.state()
+
+  if Fly.enabled then
+    Fly.bv.Parent = st.hrp
+    Fly.bg.Parent = st.hrp
+
+    Fly.Core.connect("fly_loop", Fly.Core.services().RunService.RenderStepped:Connect(function()
+      if not Fly.enabled then
+        Fly.Core.disconnect("fly_loop")
+        return
+      end
+
+      local dir = Vector3.new()
+      local uis = Fly.Core.services().UserInputService
+
+      if uis:IsKeyDown(Enum.KeyCode.W) then dir = dir + st.hrp.CFrame.LookVector end
+      if uis:IsKeyDown(Enum.KeyCode.S) then dir = dir - st.hrp.CFrame.LookVector end
+      if uis:IsKeyDown(Enum.KeyCode.A) then dir = dir - st.hrp.CFrame.RightVector end
+      if uis:IsKeyDown(Enum.KeyCode.D) then dir = dir + st.hrp.CFrame.RightVector end
+      if uis:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0,1,0) end
+      if uis:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.new(0,1,0) end
+
+      Fly.bv.Velocity = dir.Magnitude > 0 and dir.Unit * Fly.speed or Vector3.new()
+      Fly.bg.CFrame = CFrame.new(st.hrp.Position, st.hrp.Position + st.mouse.Hit.LookVector)
+    end))
+
+    print("[FK7] Voo ativado")
+  else
+    Fly.Core.disconnect("fly_loop")
+    Fly.bv.Parent = nil
+    Fly.bg.Parent = nil
+    print("[FK7] Voo desativado")
+  end
+
+  return Fly.enabled
+end
+
+function Fly.disable()
+  if Fly.enabled then
+    Fly.enabled = false
+    Fly.Core.disconnect("fly_loop")
+    Fly.bv.Parent = nil
+    Fly.bg.Parent = nil
+  end
+end
+
+return Flyfunction Fly.setMode(newMode)
   if Fly.modes[newMode] then
     Fly.mode = newMode
     local modeData = Fly.modes[newMode]

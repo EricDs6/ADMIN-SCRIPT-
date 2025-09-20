@@ -564,20 +564,6 @@ function UI.init(ctx)
     createFeatureButton(tabContents["Movimento"], "Voo", "✈️", function() 
       return F.fly.toggle() 
     end)
-    
-    -- Botões para modos de voo
-    createFeatureButton(tabContents["Movimento"], "Modo Normal", "🚀", function() 
-      F.fly.toggleNormalMode()
-      print("[FK7] Modo Normal ativado")
-    end)
-    createFeatureButton(tabContents["Movimento"], "Modo Rápido", "⚡", function() 
-      F.fly.toggleFastMode()
-      print("[FK7] Modo Rápido ativado")
-    end)
-    createFeatureButton(tabContents["Movimento"], "Modo Stealth", "👤", function() 
-      F.fly.toggleStealthMode()
-      print("[FK7] Modo Stealth ativado")
-    end)
   end
   if F.teleport then
     createFeatureButton(tabContents["Movimento"], "TP ao Clicar", "📍", function() 

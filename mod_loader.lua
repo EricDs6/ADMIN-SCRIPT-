@@ -15,34 +15,51 @@ local SOURCE = {
 
 local function load_module(name)
   local url = SOURCE[name]
-  local ok, mod
+  print("[FK7] Iniciando carregamento do módulo:", name)
+
   if url and typeof(url) == "string" and url ~= "" then
+    print("[FK7] Tentando URL:", url)
     local success, src = pcall(function()
       return game:HttpGet(url)
     end)
-    if success and src and src ~= "" then
-      ok, mod = pcall(function()
-        return loadstring(src)()
-      end)
-      if ok and mod then 
-        print("[FK7] Módulo carregado com sucesso:", name)
-        return mod 
+
+    if success then
+      print("[FK7] HttpGet bem-sucedido para", name, "- Tamanho:", #src)
+      if src and src ~= "" then
+        print("[FK7] Conteúdo obtido, executando loadstring...")
+        local ok, mod = pcall(function()
+          return loadstring(src)()
+        end)
+        if ok and mod then
+          print("[FK7] Módulo carregado com sucesso:", name)
+          return mod
+        else
+          warn("[FK7] ERRO no loadstring para", name, "- Erro:", tostring(mod))
+          warn("[FK7] Conteúdo do arquivo (primeiras 200 chars):", src:sub(1, 200))
+        end
+      else
+        warn("[FK7] Conteúdo vazio retornado para", name)
       end
-      warn("Falha ao executar loadstring para módulo:", name, tostring(mod))
     else
-      warn("Falha ao obter conteúdo da URL:", name, tostring(src))
+      warn("[FK7] Falha no HttpGet para", name, "- Erro:", tostring(src))
     end
+  else
+    print("[FK7] URL inválida ou vazia para", name)
   end
+
   -- fallback: carregar localmente da pasta modules
   print("[FK7] Tentando carregar módulo local:", name)
   local success, result = pcall(function()
     local src = readfile and readfile("modules/"..name..".lua")
-    if not src then error("Arquivo local ausente: modules/"..name..".lua") end
+    if not src then
+      error("Arquivo local ausente: modules/"..name..".lua")
+    end
+    print("[FK7] Arquivo local encontrado, executando loadstring...")
     return loadstring(src)()
   end)
-  if success then 
+  if success then
     print("[FK7] Módulo local carregado:", name)
-    return result 
+    return result
   end
   error("Não foi possível carregar módulo: "..name.." - "..tostring(result))
 end
