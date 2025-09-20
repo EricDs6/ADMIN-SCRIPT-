@@ -102,8 +102,15 @@ function UI.init(ctx)
     Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
 
     closeButton.MouseButton1Click:Connect(function()
+        -- Executar shutdown completo
+        if ctx.core and ctx.core.shutdown then
+            ctx.core.shutdown()
+        end
+        
+        -- Destruir GUI
         gui:Destroy()
-        -- A lógica de encerramento completo será adicionada aqui
+        
+        print("[FK7] Interface fechada e script encerrado")
     end)
 
     -- Container de conteúdo

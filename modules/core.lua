@@ -48,6 +48,32 @@ function Core.registerForRespawn(module_name, is_enabled)
     modules_to_respawn[module_name] = is_enabled
 end
 
+function Core.shutdown()
+    -- Desativar todos os módulos ativos
+    if _G.FK7 and _G.FK7.Features then
+        for module_name, module in pairs(_G.FK7.Features) do
+            if module and module.enabled and module.disable then
+                pcall(module.disable)
+            end
+        end
+    end
+    
+    -- Limpar todas as conexões
+    Core.cleanup()
+    
+    -- Limpar variáveis globais
+    if _G.FK7 then
+        _G.FK7 = nil
+    end
+    
+    -- Restaurar configurações do workspace se alteradas
+    pcall(function()
+        workspace.Gravity = 196.2 -- Gravidade padrão
+    end)
+    
+    print("[FK7] Script encerrado e módulos desativados")
+end
+
 function Core.onCharacterAdded(callback)
     table.insert(character_added_callbacks, callback)
 end
