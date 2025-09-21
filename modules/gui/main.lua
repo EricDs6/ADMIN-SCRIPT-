@@ -343,45 +343,31 @@ local function createGUI()
         DisplayOrder = 100
     })
     
-    -- Inserção segura do ScreenGui (preferir PlayerGui; validar gethui)
-    local function safeGetHUI()
-        if type(gethui) == "function" then
-            local ok, res = pcall(gethui)
-            if ok and typeof(res) == "Instance" then
-                return res
-            end
-        end
-        return nil
-    end
-
-    local function getPreferredParent()
-        -- 1) PlayerGui
+    -- Inserção somente em PlayerGui (evita chamadas a CoreGui/gethui)
+    local function getPlayerGui(timeout)
+        timeout = timeout or 2
         local pg = Player and Player:FindFirstChildOfClass("PlayerGui")
-        if typeof(pg) == "Instance" then return pg end
-        -- 2) gethui (quando seguro)
-        local hui = safeGetHUI()
-        if hui then return hui end
-        -- 3) CoreGui como último recurso
-        return game:GetService("CoreGui")
+        local elapsed = 0
+        while not pg and elapsed < timeout do
+            task.wait(0.1)
+            elapsed += 0.1
+            pg = Player and Player:FindFirstChildOfClass("PlayerGui")
+        end
+        return pg
     end
 
-    -- Proteger ScreenGui (Synapse) sem assumir sucesso
-    pcall(function()
-        if syn and type(syn.protect_gui) == "function" then
-            syn.protect_gui(screenGui)
-        end
-    end)
+    local pg = getPlayerGui(2)
+    if not pg then
+        warn("[GUI] PlayerGui não disponível. Abortando criação da GUI para evitar erros de CoreGui.")
+        return
+    end
 
-    local parentGui = getPreferredParent()
     local okParent = pcall(function()
-        screenGui.Parent = parentGui
+        screenGui.Parent = pg
     end)
     if not okParent then
-        -- Última tentativa: PlayerGui
-        local fallback = Player and Player:FindFirstChildOfClass("PlayerGui")
-        if fallback then
-            pcall(function() screenGui.Parent = fallback end)
-        end
+        warn("[GUI] Falha ao parentear ScreenGui em PlayerGui.")
+        return
     end
     
     -- Criar frame principal
