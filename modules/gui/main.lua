@@ -101,21 +101,25 @@ local function createFeatureButton(parent, text, callback, getStateFunc)
     
     -- Ação do botão
     button.MouseButton1Click:Connect(function()
-        if callback then
-            callback()
-            
+        if type(callback) == "function" then
+            local ok = pcall(callback)
+            if not ok then warn("[GUI] Callback do botão falhou: " .. tostring(text)) end
             -- Atualizar indicador de estado
-            if getStateFunc then
-                local isActive = getStateFunc()
-                stateIndicator.BackgroundColor3 = isActive and GUIModule.colors.enabled or GUIModule.colors.disabled
+            if type(getStateFunc) == "function" then
+                local ok2, isActive = pcall(getStateFunc)
+                if ok2 then
+                    stateIndicator.BackgroundColor3 = isActive and GUIModule.colors.enabled or GUIModule.colors.disabled
+                end
             end
         end
     end)
     
     -- Atualizar estado inicial
-    if getStateFunc then
-        local isActive = getStateFunc()
-        stateIndicator.BackgroundColor3 = isActive and GUIModule.colors.enabled or GUIModule.colors.disabled
+    if type(getStateFunc) == "function" then
+        local ok3, isActive = pcall(getStateFunc)
+        if ok3 then
+            stateIndicator.BackgroundColor3 = isActive and GUIModule.colors.enabled or GUIModule.colors.disabled
+        end
     end
     
     button.Parent = parent
@@ -339,31 +343,46 @@ local function createGUI()
         DisplayOrder = 100
     })
     
-    -- Inserir no jogador (robusto a diferentes executores)
-    local parentGui = nil
-    -- Tentar proteger e usar CoreGui (Synapse)
+    -- Inserção segura do ScreenGui (preferir PlayerGui; validar gethui)
+    local function safeGetHUI()
+        if type(gethui) == "function" then
+            local ok, res = pcall(gethui)
+            if ok and typeof(res) == "Instance" then
+                return res
+            end
+        end
+        return nil
+    end
+
+    local function getPreferredParent()
+        -- 1) PlayerGui
+        local pg = Player and Player:FindFirstChildOfClass("PlayerGui")
+        if typeof(pg) == "Instance" then return pg end
+        -- 2) gethui (quando seguro)
+        local hui = safeGetHUI()
+        if hui then return hui end
+        -- 3) CoreGui como último recurso
+        return game:GetService("CoreGui")
+    end
+
+    -- Proteger ScreenGui (Synapse) sem assumir sucesso
     pcall(function()
         if syn and type(syn.protect_gui) == "function" then
             syn.protect_gui(screenGui)
-            parentGui = game:GetService("CoreGui")
         end
     end)
-    -- Tentar usar gethui() quando disponível
-    if not parentGui then
-        if type(gethui) == "function" then
-            local ok, res = pcall(gethui)
-            if ok and res then
-                parentGui = res
-            end
+
+    local parentGui = getPreferredParent()
+    local okParent = pcall(function()
+        screenGui.Parent = parentGui
+    end)
+    if not okParent then
+        -- Última tentativa: PlayerGui
+        local fallback = Player and Player:FindFirstChildOfClass("PlayerGui")
+        if fallback then
+            pcall(function() screenGui.Parent = fallback end)
         end
     end
-    -- Fallback para PlayerGui
-    if not parentGui then
-        local pg = Player:FindFirstChildOfClass("PlayerGui")
-        if pg then parentGui = pg end
-    end
-    -- Fallback final para CoreGui (pode falhar em alguns executores)
-    screenGui.Parent = parentGui or game:GetService("CoreGui")
     
     -- Criar frame principal
     local mainFrame = createElement("Frame", {
@@ -545,8 +564,17 @@ local function createGUI()
             createFeatureButton(
                 movementTab.content,
                 "Modo de Voo",
-                function() Admin.Movement.fly.toggle() end,
-                function() return Admin.Movement.fly.isEnabled() end
+                function()
+                    if Admin.Movement.fly and type(Admin.Movement.fly.toggle) == "function" then
+                        Admin.Movement.fly.toggle()
+                    end
+                end,
+                function()
+                    if Admin.Movement.fly and type(Admin.Movement.fly.isEnabled) == "function" then
+                        return Admin.Movement.fly.isEnabled()
+                    end
+                    return false
+                end
             )
             
             -- Slider para velocidade de voo
@@ -555,8 +583,12 @@ local function createGUI()
                 "Velocidade de Voo",
                 10,
                 200,
-                Admin.Movement.fly.getSpeed(),
-                function(value) Admin.Movement.fly.setSpeed(value) end
+                (Admin.Movement.fly and type(Admin.Movement.fly.getSpeed) == "function" and Admin.Movement.fly.getSpeed()) or 50,
+                function(value)
+                    if Admin.Movement.fly and type(Admin.Movement.fly.setSpeed) == "function" then
+                        Admin.Movement.fly.setSpeed(value)
+                    end
+                end
             )
         end
         
@@ -565,8 +597,17 @@ local function createGUI()
             createFeatureButton(
                 movementTab.content,
                 "Atravessar Paredes (Noclip)",
-                function() Admin.Movement.noclip.toggle() end,
-                function() return Admin.Movement.noclip.isEnabled() end
+                function()
+                    if Admin.Movement.noclip and type(Admin.Movement.noclip.toggle) == "function" then
+                        Admin.Movement.noclip.toggle()
+                    end
+                end,
+                function()
+                    if Admin.Movement.noclip and type(Admin.Movement.noclip.isEnabled) == "function" then
+                        return Admin.Movement.noclip.isEnabled()
+                    end
+                    return false
+                end
             )
         end
         
@@ -575,8 +616,17 @@ local function createGUI()
             createFeatureButton(
                 movementTab.content,
                 "Velocidade Normal",
-                function() Admin.Movement.speed.reset() end,
-                function() return not Admin.Movement.speed.isEnabled() end
+                function()
+                    if Admin.Movement.speed and type(Admin.Movement.speed.reset) == "function" then
+                        Admin.Movement.speed.reset()
+                    end
+                end,
+                function()
+                    if Admin.Movement.speed and type(Admin.Movement.speed.isEnabled) == "function" then
+                        return not Admin.Movement.speed.isEnabled()
+                    end
+                    return true
+                end
             )
             
             createSlider(
@@ -584,21 +634,31 @@ local function createGUI()
                 "Velocidade de Movimento",
                 16,
                 200,
-                Admin.Movement.speed.isEnabled() and Admin.Movement.speed.getCurrent() or 16,
-                function(value) Admin.Movement.speed.set(value) end
+                (Admin.Movement.speed and type(Admin.Movement.speed.isEnabled) == "function" and Admin.Movement.speed.isEnabled() and type(Admin.Movement.speed.getCurrent) == "function" and Admin.Movement.speed.getCurrent()) or 16,
+                function(value)
+                    if Admin.Movement.speed and type(Admin.Movement.speed.set) == "function" then
+                        Admin.Movement.speed.set(value)
+                    end
+                end
             )
         end
     end
     
     -- Guia de personagem
-    if Admin.Character then
+    if Admin.Character or Admin.CharacterMods then
         -- Godmode
-        if Admin.Character.godmode then
+        local god = (Admin.Character and Admin.Character.godmode) or (Admin.CharacterMods and Admin.CharacterMods.godmode)
+        if god then
             createFeatureButton(
                 characterTab.content,
                 "Modo Invencível",
-                function() Admin.Character.godmode.toggle() end,
-                function() return Admin.Character.godmode.isEnabled() end
+                function()
+                    if god and type(god.toggle) == "function" then god.toggle() end
+                end,
+                function()
+                    if god and type(god.isEnabled) == "function" then return god.isEnabled() end
+                    return false
+                end
             )
         end
     end
