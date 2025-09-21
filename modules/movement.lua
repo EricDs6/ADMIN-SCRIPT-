@@ -157,6 +157,31 @@ function toggleFly()
             return
         end
         
+        -- Salvar valores originais para restaurar depois
+        if Admin.Humanoid then
+            Admin.OriginalValues.Health = Admin.Humanoid.Health
+            Admin.OriginalValues.MaxHealth = Admin.Humanoid.MaxHealth
+            Admin.OriginalValues.PlatformStand = Admin.Humanoid.PlatformStand
+            
+            -- Proteger contra dano durante o voo
+            Admin.Humanoid.MaxHealth = math.huge
+            Admin.Humanoid.Health = math.huge
+            Admin.Humanoid.PlatformStand = true
+            
+            -- Desabilitar estados que causam dano
+            local statesEnabled = {}
+            for _, state in pairs({
+                Enum.HumanoidStateType.Freefall,
+                Enum.HumanoidStateType.FallingDown,
+                Enum.HumanoidStateType.Ragdoll,
+                Enum.HumanoidStateType.PlatformStanding
+            }) do
+                statesEnabled[state] = Admin.Humanoid:GetStateEnabled(state)
+                pcall(function() Admin.Humanoid:SetStateEnabled(state, false) end)
+            end
+            Admin.OriginalValues.StatesEnabled = statesEnabled
+        end
+        
         -- Criar objetos de física
         local bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
@@ -172,6 +197,19 @@ function toggleFly()
         -- Armazenar referências
         Admin.Movement.BodyVelocity = bodyVelocity
         Admin.Movement.BodyGyro = bodyGyro
+        
+        -- Conexão para manter a saúde durante o voo
+        Admin.Connections.FlyHealthProtection = Services.RunService.Heartbeat:Connect(function()
+            if Admin.Movement.flyEnabled and Admin.Humanoid then
+                if Admin.Humanoid.Health < Admin.Humanoid.MaxHealth then
+                    Admin.Humanoid.Health = Admin.Humanoid.MaxHealth
+                end
+                -- Forçar estado seguro
+                if Admin.Humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
+                    pcall(function() Admin.Humanoid:ChangeState(Enum.HumanoidStateType.Physics) end)
+                end
+            end
+        end)
         
         -- Loop de movimento
         Admin.Connections.Fly = Services.RunService.Heartbeat:Connect(function()
@@ -212,11 +250,18 @@ function toggleFly()
         end)
         
         print("✈️ Voo ativado! Use WASD + Espaço/Ctrl para voar")
+        print("🛡️ Proteção contra dano ativada!")
     else
         -- Desabilitar fly
         if Admin.Connections.Fly then
             Admin.Connections.Fly:Disconnect()
             Admin.Connections.Fly = nil
+        end
+        
+        -- Desabilitar proteção de saúde
+        if Admin.Connections.FlyHealthProtection then
+            Admin.Connections.FlyHealthProtection:Disconnect()
+            Admin.Connections.FlyHealthProtection = nil
         end
         
         if Admin.Movement.BodyVelocity then
@@ -229,7 +274,62 @@ function toggleFly()
             Admin.Movement.BodyGyro = nil
         end
         
+        -- Restaurar valores originais
+        if Admin.Humanoid and Admin.OriginalValues then
+            -- Restaurar saúde gradualmente para evitar morte súbita
+            if Admin.OriginalValues.Health and Admin.OriginalValues.MaxHealth then
+                Admin.Humanoid.MaxHealth = Admin.OriginalValues.MaxHealth
+                -- Garantir que não morra ao restaurar
+                local targetHealth = math.max(Admin.OriginalValues.Health, Admin.OriginalValues.MaxHealth * 0.5)
+                Admin.Humanoid.Health = targetHealth
+            end
+            
+            -- Restaurar PlatformStand
+            if Admin.OriginalValues.PlatformStand ~= nil then
+                Admin.Humanoid.PlatformStand = Admin.OriginalValues.PlatformStand
+            end
+            
+            -- Restaurar estados do humanoid
+            if Admin.OriginalValues.StatesEnabled then
+                for state, wasEnabled in pairs(Admin.OriginalValues.StatesEnabled) do
+                    pcall(function() Admin.Humanoid:SetStateEnabled(state, wasEnabled) end)
+                end
+            end
+        end
+        
+        -- Pouso suave: detectar chão próximo
+        if Admin.HumanoidRootPart then
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Exclude
+            rayParams.FilterDescendantsInstances = {Admin.Character}
+            
+            local rayResult = workspace:Raycast(
+                Admin.HumanoidRootPart.Position, 
+                Vector3.new(0, -50, 0), 
+                rayParams
+            )
+            
+            if rayResult then
+                -- Pousar suavemente 3 studs acima do chão
+                local landingPosition = rayResult.Position + Vector3.new(0, 3, 0)
+                Admin.HumanoidRootPart.CFrame = CFrame.new(
+                    landingPosition.X,
+                    landingPosition.Y,
+                    landingPosition.Z
+                )
+                -- Zerar velocidade para pouso suave
+                Admin.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end
+        
+        -- Forçar estado de corrida após desabilitar
+        wait(0.1)
+        if Admin.Humanoid then
+            pcall(function() Admin.Humanoid:ChangeState(Enum.HumanoidStateType.Running) end)
+        end
+        
         print("🚶 Voo desativado!")
+        print("🛡️ Proteção contra dano desativada!")
     end
 end
 

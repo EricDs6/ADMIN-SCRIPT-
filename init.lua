@@ -140,13 +140,53 @@ local function cleanup()
     end
     Admin.Connections = {}
     
+    -- Remover objetos de física se existirem
+    if Admin.Movement and Admin.Movement.BodyVelocity then
+        pcall(function() Admin.Movement.BodyVelocity:Destroy() end)
+        Admin.Movement.BodyVelocity = nil
+    end
+    if Admin.Movement and Admin.Movement.BodyGyro then
+        pcall(function() Admin.Movement.BodyGyro:Destroy() end)
+        Admin.Movement.BodyGyro = nil
+    end
+    
     -- Restaurar valores originais
-    for key, value in pairs(Admin.OriginalValues) do
-        if key == "WalkSpeed" and Admin.Humanoid then
-            Admin.Humanoid.WalkSpeed = value
+    if Admin.Humanoid and Admin.OriginalValues then
+        -- Restaurar saúde
+        if Admin.OriginalValues.Health and Admin.OriginalValues.MaxHealth then
+            Admin.Humanoid.MaxHealth = Admin.OriginalValues.MaxHealth
+            Admin.Humanoid.Health = math.max(Admin.OriginalValues.Health, Admin.OriginalValues.MaxHealth * 0.5)
+        end
+        
+        -- Restaurar PlatformStand
+        if Admin.OriginalValues.PlatformStand ~= nil then
+            Admin.Humanoid.PlatformStand = Admin.OriginalValues.PlatformStand
+        end
+        
+        -- Restaurar estados do humanoid
+        if Admin.OriginalValues.StatesEnabled then
+            for state, wasEnabled in pairs(Admin.OriginalValues.StatesEnabled) do
+                pcall(function() Admin.Humanoid:SetStateEnabled(state, wasEnabled) end)
+            end
+        end
+        
+        -- Restaurar velocidade de caminhada
+        if Admin.OriginalValues.WalkSpeed then
+            Admin.Humanoid.WalkSpeed = Admin.OriginalValues.WalkSpeed
         end
     end
+    
+    -- Limpar valores originais
     Admin.OriginalValues = {}
+    
+    -- Restaurar colisão das partes do character
+    if Admin.Character then
+        for _, part in pairs(Admin.Character:GetChildren()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.CanCollide = true
+            end
+        end
+    end
     
     -- Remover GUI
     if Admin.GUI.ScreenGui then
@@ -154,7 +194,14 @@ local function cleanup()
         Admin.GUI = {}
     end
     
+    -- Resetar estados dos módulos
+    if Admin.Movement then
+        Admin.Movement.flyEnabled = false
+        Admin.Movement.noclipEnabled = false
+    end
+    
     print("🧹 Sistema limpo!")
+    print("🛡️ Todos os valores foram restaurados!")
 end
 
 -- Comando de limpeza via chat
