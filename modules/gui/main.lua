@@ -339,15 +339,31 @@ local function createGUI()
         DisplayOrder = 100
     })
     
-    -- Inserir no jogador
-    if syn and syn.protect_gui then
-        syn.protect_gui(screenGui)
-        screenGui.Parent = game.CoreGui
-    elseif gethui then
-        screenGui.Parent = gethui()
-    else
-        screenGui.Parent = Player:FindFirstChildOfClass("PlayerGui")
+    -- Inserir no jogador (robusto a diferentes executores)
+    local parentGui = nil
+    -- Tentar proteger e usar CoreGui (Synapse)
+    pcall(function()
+        if syn and type(syn.protect_gui) == "function" then
+            syn.protect_gui(screenGui)
+            parentGui = game:GetService("CoreGui")
+        end
+    end)
+    -- Tentar usar gethui() quando disponível
+    if not parentGui then
+        if type(gethui) == "function" then
+            local ok, res = pcall(gethui)
+            if ok and res then
+                parentGui = res
+            end
+        end
     end
+    -- Fallback para PlayerGui
+    if not parentGui then
+        local pg = Player:FindFirstChildOfClass("PlayerGui")
+        if pg then parentGui = pg end
+    end
+    -- Fallback final para CoreGui (pode falhar em alguns executores)
+    screenGui.Parent = parentGui or game:GetService("CoreGui")
     
     -- Criar frame principal
     local mainFrame = createElement("Frame", {
@@ -640,7 +656,7 @@ local function cleanupGUI()
     GUIModule.tabs = {}
     GUIModule.activeTab = nil
     GUIModule.visible = false
-}
+end
 
 -- Exportar funções do módulo
 local API = {
