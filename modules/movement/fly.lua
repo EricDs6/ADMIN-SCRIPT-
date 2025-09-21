@@ -58,7 +58,8 @@ local function enableFly()
     end
     
     -- Verificar se está em um veículo
-    FlyModule.vehicle, local seat = findVehicle()
+    local vehicle, seat = findVehicle()
+    FlyModule.vehicle = vehicle
     local targetPart = FlyModule.vehicle or rootPart -- Aplicar física ao veículo ou ao personagem
     
     -- Salvar valores originais
@@ -129,7 +130,11 @@ local function enableFly()
         
         -- Aplicar movimento
         if bodyVelocity and bodyVelocity.Parent then
-            bodyVelocity.Velocity = moveVector.Unit * FlyModule.speed
+            if moveVector.Magnitude > 0 then
+                bodyVelocity.Velocity = moveVector.Unit * FlyModule.speed
+            else
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+            end
         end
         if bodyGyro and bodyGyro.Parent then
             bodyGyro.CFrame = camera.CFrame
