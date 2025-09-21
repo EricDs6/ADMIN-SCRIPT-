@@ -500,7 +500,7 @@ local function loadSection(name)
         end
     end
     -- Fallback GitHub
-    local base = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/src/sections/"
+    local base = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/src/sections/"
     local src = httpGet(base .. name .. ".lua")
     if src and compile then
         local chunk, err = compile(src)
