@@ -2172,11 +2172,10 @@ end
 -- Atualizar canvas após montar todas as seções
 contentFrame.CanvasSize = UDim2.new(0, 0, 0, yOffset + 80)
 print("🔥 Admin Script v2.0 carregado com sucesso! 🔥")
-print("💡 Use os botões na GUI ou comandos de chat (/voar, /atravessar, /deus, etc.)")
-print("� Painel aparece no canto esquerdo da tela")
-print("🔧 Use o botão de minimizar (—) para transformar em botão flutuante")
+print("💡 Use os botões na GUI para ativar/desativar as funcionalidades por seção.")
+print("📍 Painel aparece no canto esquerdo da tela.")
+print("🔧 Use o botão de minimizar (—) para transformar em botão flutuante.")
 print("🌈 Botão minimizado pisca e muda de cor no canto inferior direito!")
-print("� Botão minimizado pisca e muda de cor próximo ao chat!")
 end
 
 return M
