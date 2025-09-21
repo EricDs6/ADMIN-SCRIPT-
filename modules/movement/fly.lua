@@ -1,283 +1,409 @@
--- Módulo de Voo (Fly) - Versão Melhorada
--- Funcionalidade: Permite voar com controles WASD + Espaço/Ctrl, suporta veículos e evita danos
--- Carregado via _G.AdminScript
+--[[
+    Módulo de Voo (Fly)
+    Parte do Admin Script Modular v2.0
+    
+    Funcionalidades:
+    - Voar com controles WASD + Espaço/Ctrl
+    - Ajuste de velocidade
+    - Suporte a veículos
+    - Modo compatível com noclip
+]]
 
 -- Verificar se AdminScript está disponível
 local Admin = _G.AdminScript
 if not Admin then
-    warn("❌ Sistema AdminScript não inicializado!")
+    warn("❌ AdminScript não inicializado! Módulo de voo não pode ser carregado.")
     return
 end
 
 local Services = Admin.Services
 local Player = Admin.Player
 
-print("✈️ Carregando módulo de voo aprimorado...")
-
 -- Estado do módulo
 local FlyModule = {
     enabled = false,
-    speed = 50,
+    speed = Admin.Config.defaultFlySpeed or 50,
     bodyVelocity = nil,
     bodyGyro = nil,
     weld = nil,
     connection = nil,
-    vehicle = nil, -- Referência ao assento ou modelo do veículo
-    useNoclip = false -- Opção para ativar noclip durante o voo
+    vehicle = nil,
+    seat = nil,
+    useNoclip = false
 }
 
--- Adicionar ao Admin.Movement para acesso global
-Admin.Movement = Admin.Movement or {}
-Admin.Movement.fly = FlyModule
+-- Constantes
+local CONTROL_ACTIONS = {
+    moveForward = false,
+    moveBackward = false,
+    moveRight = false,
+    moveLeft = false,
+    moveUp = false,
+    moveDown = false
+}
 
--- Função para encontrar o veículo (assento ou modelo pai)
+-- Função para encontrar o veículo
 local function findVehicle()
-    -- Garantir que Humanoid esteja acessível
-    Admin.Character = Player.Character
-    Admin.Humanoid = Admin.Character and Admin.Character:FindFirstChildOfClass("Humanoid")
-    
-    if Admin.Humanoid and Admin.Humanoid.SeatPart and (Admin.Humanoid.SeatPart:IsA("Seat") or Admin.Humanoid.SeatPart:IsA("VehicleSeat")) then
-        local seat = Admin.Humanoid.SeatPart
-        -- Tentar encontrar o modelo pai do assento (ex.: carro completo)
-        local model = seat:FindFirstAncestorOfClass("Model") or seat
-        return model, seat
+    -- Atualizar referência do personagem
+    local character = Player.Character
+    if not character then
+        return nil, nil
     end
+    
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        return nil, nil
+    end
+    
+    if humanoid.SeatPart and (humanoid.SeatPart:IsA("Seat") or humanoid.SeatPart:IsA("VehicleSeat")) then
+        local seat = humanoid.SeatPart
+        local vehicle = seat:FindFirstAncestorOfClass("Model")
+        return vehicle, seat
+    end
+    
     return nil, nil
 end
 
--- Função para criar um WeldConstraint entre o personagem e o assento
-local function createWeld(character, seat)
-    local weld = Instance.new("WeldConstraint")
-    weld.Part0 = Admin.HumanoidRootPart
-    weld.Part1 = seat
-    weld.Parent = Admin.HumanoidRootPart
-    return weld
+-- Função para controlar o voo
+local function flyStep()
+    if not FlyModule.enabled then return end
+    
+    -- Obter referências atuais do personagem
+    local character = Player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    -- Calcular direção baseada nos controles
+    local flyDirection = Vector3.new(0, 0, 0)
+    
+    -- Frente/Trás
+    if CONTROL_ACTIONS.moveForward then
+        flyDirection = flyDirection + (hrp.CFrame.LookVector * 1)
+    end
+    if CONTROL_ACTIONS.moveBackward then
+        flyDirection = flyDirection + (hrp.CFrame.LookVector * -1)
+    end
+    
+    -- Esquerda/Direita
+    if CONTROL_ACTIONS.moveRight then
+        flyDirection = flyDirection + (hrp.CFrame.RightVector * 1)
+    end
+    if CONTROL_ACTIONS.moveLeft then
+        flyDirection = flyDirection + (hrp.CFrame.RightVector * -1)
+    end
+    
+    -- Cima/Baixo
+    if CONTROL_ACTIONS.moveUp then
+        flyDirection = flyDirection + Vector3.new(0, 1, 0)
+    end
+    if CONTROL_ACTIONS.moveDown then
+        flyDirection = flyDirection + Vector3.new(0, -1, 0)
+    end
+    
+    -- Normalizar e aplicar velocidade
+    if flyDirection.Magnitude > 0 then
+        flyDirection = flyDirection.Unit * FlyModule.speed
+    end
+    
+    -- Aplicar velocidade
+    if FlyModule.vehicle then
+        -- Se estiver em veículo
+        if FlyModule.bodyVelocity and FlyModule.bodyVelocity.Parent then
+            FlyModule.bodyVelocity.Velocity = flyDirection
+        end
+    else
+        -- Se estiver a pé
+        if FlyModule.bodyVelocity and FlyModule.bodyVelocity.Parent then
+            FlyModule.bodyVelocity.Velocity = flyDirection
+        end
+    end
+end
+
+-- Função para configurar os controles
+local function setupFlyControls()
+    local userInputService = Services.UserInputService
+    
+    -- Detectar teclas pressionadas
+    local function onInputBegan(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.KeyCode == Enum.KeyCode.W then
+            CONTROL_ACTIONS.moveForward = true
+        elseif input.KeyCode == Enum.KeyCode.S then
+            CONTROL_ACTIONS.moveBackward = true
+        elseif input.KeyCode == Enum.KeyCode.D then
+            CONTROL_ACTIONS.moveRight = true
+        elseif input.KeyCode == Enum.KeyCode.A then
+            CONTROL_ACTIONS.moveLeft = true
+        elseif input.KeyCode == Enum.KeyCode.Space then
+            CONTROL_ACTIONS.moveUp = true
+        elseif input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            CONTROL_ACTIONS.moveDown = true
+        end
+    end
+    
+    -- Detectar teclas liberadas
+    local function onInputEnded(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.KeyCode == Enum.KeyCode.W then
+            CONTROL_ACTIONS.moveForward = false
+        elseif input.KeyCode == Enum.KeyCode.S then
+            CONTROL_ACTIONS.moveBackward = false
+        elseif input.KeyCode == Enum.KeyCode.D then
+            CONTROL_ACTIONS.moveRight = false
+        elseif input.KeyCode == Enum.KeyCode.A then
+            CONTROL_ACTIONS.moveLeft = false
+        elseif input.KeyCode == Enum.KeyCode.Space then
+            CONTROL_ACTIONS.moveUp = false
+        elseif input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            CONTROL_ACTIONS.moveDown = false
+        end
+    end
+    
+    -- Conectar eventos
+    Admin.Connections.FlyInputBegan = userInputService.InputBegan:Connect(onInputBegan)
+    Admin.Connections.FlyInputEnded = userInputService.InputEnded:Connect(onInputEnded)
 end
 
 -- Função para ativar voo
 local function enableFly()
-    local character = Admin.Character
-    local humanoid = Admin.Humanoid
-    local rootPart = Admin.HumanoidRootPart
+    -- Verificar se já está voando
+    if FlyModule.enabled then return true end
     
-    if not character or not humanoid or not rootPart then
+    -- Verificar personagem
+    local character = Player.Character
+    if not character then
         warn("❌ Personagem não encontrado!")
         return false
     end
     
-    -- Verificar se está em um veículo
-    local vehicle, seat = findVehicle()
-    FlyModule.vehicle = vehicle
-    local targetPart = FlyModule.vehicle or rootPart -- Aplicar física ao veículo ou ao personagem
-    
-    -- Salvar valores originais
-    if not Admin.OriginalValues.WalkSpeed then
-        Admin.OriginalValues.WalkSpeed = humanoid.WalkSpeed
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then
+        warn("❌ HumanoidRootPart não encontrado!")
+        return false
     end
     
-    -- Ativar estado de voo
-    pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.Flying) end)
-    
-    -- Criar objetos de física
-    local bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge) -- Força suficiente para veículos
-    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    bodyVelocity.Parent = targetPart
-    
-    local bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bodyGyro.P = 5000
-    bodyGyro.D = 500
-    bodyGyro.Parent = targetPart
-    
-    -- Criar weld se estiver em um assento
-    if seat then
-        FlyModule.weld = createWeld(character, seat)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        warn("❌ Humanoid não encontrado!")
+        return false
     end
     
-    -- Armazenar referências
-    FlyModule.bodyVelocity = bodyVelocity
-    FlyModule.bodyGyro = bodyGyro
+    -- Verificar se está em veículo
+    FlyModule.vehicle, FlyModule.seat = findVehicle()
     
-    -- Loop de controle de movimento
-    FlyModule.connection = Services.RunService.Heartbeat:Connect(function()
-        if not FlyModule.enabled then return end
-        if not targetPart or not targetPart.Parent then return end
-        
-        local moveVector = Vector3.new()
-        local camera = workspace.CurrentCamera
-        if not camera then return end
-        
-        -- Controles WASD + Space/LeftControl + Q/E para velocidade
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            moveVector = moveVector + camera.CFrame.LookVector
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            moveVector = moveVector - camera.CFrame.LookVector
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            moveVector = moveVector - camera.CFrame.RightVector
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            moveVector = moveVector + camera.CFrame.RightVector
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            moveVector = moveVector + Vector3.new(0, 1, 0)
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-            moveVector = moveVector - Vector3.new(0, 1, 0)
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-            FlyModule.speed = math.max(10, FlyModule.speed - 5)
-            print("✈️ Velocidade de voo: " .. FlyModule.speed)
-        end
-        if Services.UserInputService:IsKeyDown(Enum.KeyCode.E) then
-            FlyModule.speed = FlyModule.speed + 5
-            print("✈️ Velocidade de voo: " .. FlyModule.speed)
-        end
-        
-        -- Aplicar movimento
-        if bodyVelocity and bodyVelocity.Parent then
-            if moveVector.Magnitude > 0 then
-                bodyVelocity.Velocity = moveVector.Unit * FlyModule.speed
-            else
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-            end
-        end
-        if bodyGyro and bodyGyro.Parent then
-            bodyGyro.CFrame = camera.CFrame
-        end
-    end)
+    -- Ativar noclip se configurado
+    if FlyModule.useNoclip and Admin.Movement.noclip and Admin.Movement.noclip.enable then
+        Admin.Movement.noclip.enable()
+    end
     
-    print("✈️ Voo ativado! Use WASD + Espaço/Ctrl para voar, Q/E para ajustar velocidade")
+    -- Criar controles de física para voo
+    if FlyModule.vehicle then
+        -- Controles para veículo
+        local primaryPart = FlyModule.vehicle.PrimaryPart or FlyModule.seat
+        
+        -- Criar BodyVelocity para o veículo
+        FlyModule.bodyVelocity = Instance.new("BodyVelocity")
+        FlyModule.bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        FlyModule.bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        FlyModule.bodyVelocity.Parent = primaryPart
+        
+        -- Criar BodyGyro para manter orientação
+        FlyModule.bodyGyro = Instance.new("BodyGyro")
+        FlyModule.bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        FlyModule.bodyGyro.D = 100
+        FlyModule.bodyGyro.P = 10000
+        FlyModule.bodyGyro.CFrame = primaryPart.CFrame
+        FlyModule.bodyGyro.Parent = primaryPart
+    else
+        -- Controles para personagem a pé
+        -- Criar BodyVelocity para o personagem
+        FlyModule.bodyVelocity = Instance.new("BodyVelocity")
+        FlyModule.bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        FlyModule.bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        FlyModule.bodyVelocity.Parent = hrp
+        
+        -- Criar BodyGyro para manter orientação
+        FlyModule.bodyGyro = Instance.new("BodyGyro")
+        FlyModule.bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        FlyModule.bodyGyro.D = 100
+        FlyModule.bodyGyro.P = 10000
+        FlyModule.bodyGyro.CFrame = hrp.CFrame
+        FlyModule.bodyGyro.Parent = hrp
+        
+        -- Guardar valores originais da gravidade para restaurar depois
+        Admin.OriginalValues.Humanoid = Admin.OriginalValues.Humanoid or {}
+        Admin.OriginalValues.Humanoid.PlatformStand = humanoid.PlatformStand
+        
+        -- Desabilitar gravidade
+        humanoid.PlatformStand = true
+    end
+    
+    -- Configurar controles
+    setupFlyControls()
+    
+    -- Conectar evento de atualização
+    FlyModule.connection = Services.RunService.Heartbeat:Connect(flyStep)
+    
+    -- Atualizar estado
+    FlyModule.enabled = true
+    
+    -- Notificar
+    if Admin.Config.debugMode then
+        print("✈️ Modo de voo ativado" .. (FlyModule.vehicle and " (veículo)" or ""))
+    end
+    
     return true
 end
 
 -- Função para desativar voo
 local function disableFly()
-    -- Desconectar loop de movimento
-    if FlyModule.connection then
-        pcall(function() FlyModule.connection:Disconnect() end)
-        FlyModule.connection = nil
+    -- Verificar se está voando
+    if not FlyModule.enabled then return true end
+    
+    -- Desativar noclip se foi ativado pelo módulo
+    if FlyModule.useNoclip and Admin.Movement.noclip and Admin.Movement.noclip.disable then
+        Admin.Movement.noclip.disable()
     end
     
-    -- Remover objetos de física
+    -- Remover controles de física
     if FlyModule.bodyVelocity then
-        pcall(function() FlyModule.bodyVelocity:Destroy() end)
+        FlyModule.bodyVelocity:Destroy()
         FlyModule.bodyVelocity = nil
     end
+    
     if FlyModule.bodyGyro then
-        pcall(function() FlyModule.bodyGyro:Destroy() end)
+        FlyModule.bodyGyro:Destroy()
         FlyModule.bodyGyro = nil
     end
+    
     if FlyModule.weld then
-        pcall(function() FlyModule.weld:Destroy() end)
+        FlyModule.weld:Destroy()
         FlyModule.weld = nil
     end
     
-    -- Restaurar estado do humanoide
-    if Admin.Humanoid then
-        pcall(function() Admin.Humanoid:ChangeState(Enum.HumanoidStateType.Running) end)
-        if Admin.OriginalValues.WalkSpeed then
-            pcall(function() Admin.Humanoid.WalkSpeed = Admin.OriginalValues.WalkSpeed end)
+    -- Desconectar eventos
+    if FlyModule.connection then
+        FlyModule.connection:Disconnect()
+        FlyModule.connection = nil
+    end
+    
+    if Admin.Connections.FlyInputBegan then
+        Admin.Connections.FlyInputBegan:Disconnect()
+        Admin.Connections.FlyInputBegan = nil
+    end
+    
+    if Admin.Connections.FlyInputEnded then
+        Admin.Connections.FlyInputEnded:Disconnect()
+        Admin.Connections.FlyInputEnded = nil
+    end
+    
+    -- Resetar controles
+    for action in pairs(CONTROL_ACTIONS) do
+        CONTROL_ACTIONS[action] = false
+    end
+    
+    -- Restaurar valores originais
+    local character = Player.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid and Admin.OriginalValues.Humanoid then
+            humanoid.PlatformStand = Admin.OriginalValues.Humanoid.PlatformStand
         end
     end
     
-    -- Pouso suave para personagem e veículo
-    local targetPart = FlyModule.vehicle or Admin.HumanoidRootPart
-    if targetPart then
-        local rayParams = RaycastParams.new()
-        rayParams.FilterType = Enum.RaycastFilterType.Exclude
-        rayParams.FilterDescendantsInstances = {Admin.Character, FlyModule.vehicle}
-        
-        local rayResult = workspace:Raycast(
-            targetPart.Position, 
-            Vector3.new(0, -50, 0), 
-            rayParams
-        )
-        
-        if rayResult then
-            local landingPosition = rayResult.Position + Vector3.new(0, 3, 0)
-            pcall(function()
-                targetPart.CFrame = CFrame.new(
-                    landingPosition.X,
-                    landingPosition.Y,
-                    landingPosition.Z
-                )
-                targetPart.Velocity = Vector3.new(0, 0, 0)
-            end)
-        end
-    end
-    
+    -- Limpar referências
     FlyModule.vehicle = nil
-    print("🚶 Voo desativado!")
+    FlyModule.seat = nil
+    
+    -- Atualizar estado
+    FlyModule.enabled = false
+    
+    -- Notificar
+    if Admin.Config.debugMode then
+        print("🛬 Modo de voo desativado")
+    end
+    
+    return true
 end
 
 -- Função para alternar voo
 local function toggleFly()
-    FlyModule.enabled = not FlyModule.enabled
-    
     if FlyModule.enabled then
-        local success = enableFly()
-        if not success then
-            FlyModule.enabled = false
-            return false
-        end
+        return disableFly()
     else
-        disableFly()
+        return enableFly()
     end
-    
-    return FlyModule.enabled
 end
 
 -- Função para definir velocidade
 local function setFlySpeed(speed)
-    if type(speed) == "number" and speed > 0 then
-        FlyModule.speed = speed
-        print("✈️ Velocidade de voo definida para: " .. speed)
-    else
-        warn("❌ Velocidade inválida! Use um número maior que 0")
+    if type(speed) ~= "number" or speed <= 0 then
+        warn("❌ Velocidade inválida! Use um número positivo.")
+        return false
     end
+    
+    FlyModule.speed = speed
+    
+    if Admin.Config.debugMode then
+        print("🚀 Velocidade de voo definida para " .. speed)
+    end
+    
+    return true
 end
 
--- Função para obter estado atual
+-- Função para verificar se está voando
 local function isFlying()
     return FlyModule.enabled
 end
 
--- Registrar funções no sistema global
-if not Admin.Movement then
-    Admin.Movement = {}
+-- Verificar alterações de personagem
+Admin.onCharacterChanged = Admin.onCharacterChanged or function() end
+
+local originalOnCharacterChanged = Admin.onCharacterChanged
+Admin.onCharacterChanged = function(character)
+    originalOnCharacterChanged(character)
+    
+    -- Se o voo estiver ativo, desativar e reativar para o novo personagem
+    if FlyModule.enabled then
+        disableFly()
+        wait(0.5) -- Pequeno atraso para garantir que o personagem esteja carregado
+        enableFly()
+    end
 end
 
-Admin.Movement.Fly = {
+-- Exportar funções do módulo
+local API = {
+    enable = enableFly,
+    disable = disableFly,
     toggle = toggleFly,
-    enable = function() 
-        if not FlyModule.enabled then 
-            return toggleFly() 
-        end 
-        return true 
-    end,
-    disable = function() 
-        if FlyModule.enabled then 
-            return not toggleFly() 
-        end 
-        return true 
-    end,
     setSpeed = setFlySpeed,
     getSpeed = function() return FlyModule.speed end,
     isEnabled = isFlying,
-    flyEnabled = function() return FlyModule.enabled end
+    
+    -- Propriedade para controlar se deve ativar noclip junto
+    useNoclip = function(value)
+        if value ~= nil then
+            FlyModule.useNoclip = value
+            return value
+        end
+        return FlyModule.useNoclip
+    end
 }
 
--- Atualizar referência na categoria Movement para garantir acesso correto
-Admin.Movement = Admin.Movement or {}
-Admin.Movement.fly = FlyModule
-
--- Retornar o módulo para ser acessível via loadstring
-return FlyModule
+-- Registrar na API global
+Admin.Movement.fly = API
 
 -- Registrar no sistema de conexões para limpeza
 Admin.Connections.FlyModule = FlyModule
 
-print("✅ Módulo de voo carregado com sucesso!")
+-- Mensagem de carregamento
+print("✅ Módulo de voo carregado!")
+print("💡 Use Admin.Movement.fly.toggle() para ativar/desativar")
+print("💡 Use Admin.Movement.fly.setSpeed(valor) para ajustar velocidade")
+
+-- Retornar API do módulo
+return API

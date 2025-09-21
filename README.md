@@ -1,121 +1,238 @@
-# Admin Script Modular v2.0# Admin Script (Modular, carregado por loadstring)
+# Admin Script Modular v2.0# Admin Script Modular v2.0# Admin Script (Modular, carregado por loadstring)
 
 
+
+## Descrição
+
+Este script Admin para Roblox usa uma arquitetura modular que separa cada funcionalidade em arquivos individuais para maior facilidade de manutenção e personalização. Esta abordagem modular permite que você ative apenas as funcionalidades que deseja usar.
 
 ## 🏗️ Nova Arquitetura ModularEste repositório contém o script admin modularizado para Roblox, com um módulo principal em `src/admin_core.lua` e um loader simples em `init.lua` que baixa o módulo remoto e executa com `loadstring`.
 
-
-
-Este projeto foi completamente reestruturado para máxima manutenibilidade e flexibilidade. Cada funcionalidade agora é um módulo independente.## Uso rápido (no executor)
-
-
-
-## 📁 Estrutura do ProjetoCopie e cole no seu executor de scripts Roblox:
+## Como Usar
 
 
 
-``````
+### Instalação Básica
+
+```luaEste projeto foi completamente reestruturado para máxima manutenibilidade e flexibilidade. Cada funcionalidade agora é um módulo independente.## Uso rápido (no executor)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
+
+```
+
+
+
+### Comandos de Chat## 📁 Estrutura do ProjetoCopie e cole no seu executor de scripts Roblox:
+
+- `/admin` - Abre/fecha a GUI
+
+- `/cleanup` - Remove todas as alterações feitas pelo script
+
+- `/fly` - Ativa/desativa modo de voo
+
+- `/noclip` - Ativa/desativa atravessar paredes``````
+
+- `/god` - Ativa/desativa modo invencível
 
 admPRISON/loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/init.lua"))()
 
+## Módulos Disponíveis
+
 ├── init.lua                 # Loader principal - ponto de entrada```
 
-├── config.lua              # Configurações dos módulos
+### Movimento
 
-├── modules/Isso irá buscar `init.lua` que, por sua vez, baixa `src/admin_core.lua` e executa o admin.
+- **Fly** (`Admin.Movement.fly`)├── config.lua              # Configurações dos módulos
+
+  - `.toggle()` - Ativa/desativa o modo de voo
+
+  - `.setSpeed(valor)` - Define a velocidade de voo├── modules/Isso irá buscar `init.lua` que, por sua vez, baixa `src/admin_core.lua` e executa o admin.
+
+  - `.enable()` / `.disable()` - Ativa/desativa diretamente
 
 │   ├── movement/           # Módulos de movimento
 
-│   │   ├── fly.lua        # Sistema de voo## Estrutura
+- **Noclip** (`Admin.Movement.noclip`)
 
-│   │   └── noclip.lua     # Atravessar paredes
+  - `.toggle()` - Ativa/desativa atravessar paredes│   │   ├── fly.lua        # Sistema de voo## Estrutura
 
-│   ├── gui/               # Módulos de interface- `src/admin_core.lua`: Módulo principal, expõe `start()` que monta a GUI e todas as funcionalidades.
+  - `.forceOnce()` - Atravessa paredes uma única vez
 
-│   │   └── main.lua       # GUI principal- `init.lua`: Loader resiliente que usa `syn.request`/`http.request`/`http_request`/`request`/`game:HttpGet` para buscar o módulo remoto, e valida a presença de `loadstring`.
+  - `.enable()` / `.disable()` - Ativa/desativa diretamente│   │   └── noclip.lua     # Atravessar paredes
+
+
+
+- **Speed** (`Admin.Movement.speed`)│   ├── gui/               # Módulos de interface- `src/admin_core.lua`: Módulo principal, expõe `start()` que monta a GUI e todas as funcionalidades.
+
+  - `.set(valor)` - Define a velocidade de movimento
+
+  - `.reset()` - Restaura a velocidade normal│   │   └── main.lua       # GUI principal- `init.lua`: Loader resiliente que usa `syn.request`/`http.request`/`http_request`/`request`/`game:HttpGet` para buscar o módulo remoto, e valida a presença de `loadstring`.
+
+  - `.increase(valor)` / `.decrease(valor)` - Aumenta/diminui a velocidade
 
 │   └── utils/             # Utilitários (futuras expansões)- `admin.txt`: Versão original do script (referência).
 
-└── admin.txt              # Arquivo original (referência)
+### Personagem
 
-```## Observações
+- **Godmode** (`Admin.Character.godmode`)└── admin.txt              # Arquivo original (referência)
+
+  - `.toggle()` - Ativa/desativa invencibilidade
+
+  - `.enable()` / `.disable()` - Ativa/desativa diretamente```## Observações
 
 
 
-## 🚀 Como Usar- Alguns executores exigem habilitar HTTP (`HttpGetEnabled`) e/ou usam diferentes APIs de rede. O loader tenta múltiplas abordagens automaticamente.
+### Teleporte
 
- - Se seu executor não expõe `loadstring`, o loader emitirá um erro informando a limitação.
+- **Locations** (`Admin.Teleport.locations`)
 
-### Carregar o Script Completo- Se você for usar localmente, pode simplesmente executar `src/admin_core.lua` diretamente no executor (ele retorna uma tabela `M` com `M.start()`). Exemplo:
+  - `.toPlayer("nome")` - Teleporta para um jogador## 🚀 Como Usar- Alguns executores exigem habilitar HTTP (`HttpGetEnabled`) e/ou usam diferentes APIs de rede. O loader tenta múltiplas abordagens automaticamente.
 
-```lua
+  - `.saveLocation("nome")` - Salva a localização atual
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()```
+  - `.toSaved("nome")` - Teleporta para uma localização salva - Se seu executor não expõe `loadstring`, o loader emitirá um erro informando a limitação.
+
+  - `.back()` - Volta para a localização anterior
+
+  - `.toPredefined("Prison", "Celas")` - Teleporta para local pré-definido### Carregar o Script Completo- Se você for usar localmente, pode simplesmente executar `src/admin_core.lua` diretamente no executor (ele retorna uma tabela `M` com `M.start()`). Exemplo:
+
+
+
+### GUI```lua
+
+- **Main** (`Admin.GUI.main`)
+
+  - `.toggle()` - Mostra/oculta a interface gráficaloadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()```
+
+  - `.show()` / `.hide()` - Mostra/oculta diretamente
 
 ```local M = loadstring(readfile("src/admin_core.lua"))()
 
+## Exemplo de Uso
+
 M.start()
 
-### Carregar Módulos Individuais```
+```lua
+
+-- Carregar o script### Carregar Módulos Individuais```
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
 
 ```lua
 
--- Apenas vooAproveite e bom jogo!
+-- Ativar voo
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/movement/fly.lua"))()
+Admin.Movement.fly.toggle()-- Apenas vooAproveite e bom jogo!
+
+
+
+-- Definir velocidade de voo para 100loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/movement/fly.lua"))()
+
+Admin.Movement.fly.setSpeed(100)
 
 -- Apenas noclip
-loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/movement/noclip.lua"))()
-```
 
-## 🎮 Controles
+-- Ativar modo invencívelloadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/movement/noclip.lua"))()
+
+Admin.Character.godmode.toggle()```
+
+
+
+-- Teleportar para um jogador## 🎮 Controles
+
+Admin.Teleport.locations.toPlayer("NomeDoJogador")
 
 ### Interface Gráfica
-- **Botão Voo**: Liga/desliga o sistema de voo
-- **Botão Atravessar**: Liga/desliga atravessar paredes
+
+-- Salvar localização atual- **Botão Voo**: Liga/desliga o sistema de voo
+
+Admin.Teleport.locations.saveLocation("MinhaBase")- **Botão Atravessar**: Liga/desliga atravessar paredes
+
 - **Minimizar (—)**: Esconde a janela
-- **Fechar (✕)**: Para completamente o script
 
-### Comandos de Chat
+-- Mostrar GUI- **Fechar (✕)**: Para completamente o script
+
+Admin.GUI.main.show()
+
+```### Comandos de Chat
+
 - `/cleanup` - Limpa e para tudo
-- `/limpar` - Limpa e para tudo
-- `/clear` - Limpa e para tudo
 
-### Controles de Voo
-- **WASD**: Movimento horizontal
-- **Espaço**: Subir
-- **Ctrl Esquerdo**: Descer
+## Estrutura de Arquivos- `/limpar` - Limpa e para tudo
 
-## 🔧 API dos Módulos
+```- `/clear` - Limpa e para tudo
 
-### Sistema de Voo
-```lua
-_G.AdminScript.Movement.Fly.toggle()          -- Liga/desliga
-_G.AdminScript.Movement.Fly.enable()          -- Apenas ligar
-_G.AdminScript.Movement.Fly.disable()         -- Apenas desligar
-_G.AdminScript.Movement.Fly.setSpeed(100)     -- Definir velocidade
+/
+
+├── init.lua                   # Carregador principal### Controles de Voo
+
+├── modules/                   # Pasta de módulos- **WASD**: Movimento horizontal
+
+│   ├── movement/              # Módulos de movimento- **Espaço**: Subir
+
+│   │   ├── fly.lua            # Módulo de voo- **Ctrl Esquerdo**: Descer
+
+│   │   ├── noclip.lua         # Módulo de atravessar paredes
+
+│   │   └── speed.lua          # Módulo de velocidade## 🔧 API dos Módulos
+
+│   ├── character/             # Módulos de personagem
+
+│   │   └── godmode.lua        # Módulo de invencibilidade### Sistema de Voo
+
+│   ├── teleport/              # Módulos de teleporte```lua
+
+│   │   └── locations.lua      # Módulo de localizações_G.AdminScript.Movement.Fly.toggle()          -- Liga/desliga
+
+│   └── gui/                   # Módulos de interface_G.AdminScript.Movement.Fly.enable()          -- Apenas ligar
+
+│       └── main.lua           # Interface principal_G.AdminScript.Movement.Fly.disable()         -- Apenas desligar
+
+```_G.AdminScript.Movement.Fly.setSpeed(100)     -- Definir velocidade
+
 _G.AdminScript.Movement.Fly.getSpeed()        -- Obter velocidade atual
-_G.AdminScript.Movement.Fly.isEnabled()       -- Verificar se está ativo
-```
 
-### Sistema de Noclip
-```lua
-_G.AdminScript.Movement.Noclip.toggle()       -- Liga/desliga
+## Compatibilidade_G.AdminScript.Movement.Fly.isEnabled()       -- Verificar se está ativo
+
+Este script foi projetado para funcionar com vários executores:```
+
+- Synapse X
+
+- Script-Ware### Sistema de Noclip
+
+- KRNL```lua
+
+- Executores genéricos que suportam HTTP e loadstring_G.AdminScript.Movement.Noclip.toggle()       -- Liga/desliga
+
 _G.AdminScript.Movement.Noclip.enable()       -- Apenas ligar
-_G.AdminScript.Movement.Noclip.disable()      -- Apenas desligar
-_G.AdminScript.Movement.Noclip.forceOnce()    -- Atravessar temporariamente
-_G.AdminScript.Movement.Noclip.isEnabled()    -- Verificar se está ativo
+
+## Limpeza_G.AdminScript.Movement.Noclip.disable()      -- Apenas desligar
+
+Para remover completamente o script e todas as suas alterações:_G.AdminScript.Movement.Noclip.forceOnce()    -- Atravessar temporariamente
+
+```lua_G.AdminScript.Movement.Noclip.isEnabled()    -- Verificar se está ativo
+
+_G.AdminScript.cleanup()```
+
 ```
 
-### Sistema de GUI
+ou digite `/cleanup` no chat.### Sistema de GUI
+
 ```lua
-_G.AdminScript.GUI.Module.create()            -- Criar interface
-_G.AdminScript.GUI.Module.toggleMinimize()    -- Minimizar/restaurar
-_G.AdminScript.GUI.Module.addModule()         -- Adicionar módulo
-_G.AdminScript.GUI.Module.removeModule()      -- Remover módulo
-```
 
-## ⚙️ Configuração
+## Notas_G.AdminScript.GUI.Module.create()            -- Criar interface
+
+- Algumas funções podem ser detectadas pelos sistemas anti-cheat dos jogos. Use com cuidado._G.AdminScript.GUI.Module.toggleMinimize()    -- Minimizar/restaurar
+
+- Este script é apenas para fins educacionais e de demonstração._G.AdminScript.GUI.Module.addModule()         -- Adicionar módulo
+
+_G.AdminScript.GUI.Module.removeModule()      -- Remover módulo
+
+## Créditos```
+
+- EricDs6 - Desenvolvedor
+
+- Versão 2.0 (21/09/2025)## ⚙️ Configuração
 
 O arquivo `config.lua` permite personalizar quais módulos carregar:
 
