@@ -101,10 +101,15 @@ local function loadConfig()
     local baseURL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/"
     local url = baseURL .. "config.lua"
     
+    print("⚙️ Baixando configuração...")
     local result = httpGet(url)
     if not result then
         warn("❌ Falha ao carregar configuração! Usando configuração padrão...")
         return {
+            settings = {
+                autoLoadGUI = true,
+                showLoadMessages = true
+            },
             movement = {
                 enabled = true,
                 modules = {
@@ -124,8 +129,23 @@ local function loadConfig()
     
     local compile = getLoadstring()
     if not compile then
-        warn("❌ Não foi possível compilar configuração!")
-        return {}
+        warn("❌ Não foi possível compilar configuração! Usando padrão...")
+        return {
+            movement = {
+                enabled = true,
+                modules = {
+                    fly = { enabled = true, path = "modules/movement/fly.lua" },
+                    noclip = { enabled = true, path = "modules/movement/noclip.lua" }
+                }
+            },
+            gui = {
+                enabled = true,
+                modules = {
+                    main = { enabled = true, path = "modules/gui/main.lua" }
+                }
+            },
+            loadOrder = {"movement.fly", "movement.noclip", "gui.main"}
+        }
     end
     
     local success, configFunction = pcall(compile, result)
@@ -137,8 +157,23 @@ local function loadConfig()
         end
     end
     
-    warn("❌ Erro ao executar configuração!")
-    return {}
+    warn("❌ Erro ao executar configuração! Usando padrão...")
+    return {
+        movement = {
+            enabled = true,
+            modules = {
+                fly = { enabled = true, path = "modules/movement/fly.lua" },
+                noclip = { enabled = true, path = "modules/movement/noclip.lua" }
+            }
+        },
+        gui = {
+            enabled = true,
+            modules = {
+                main = { enabled = true, path = "modules/gui/main.lua" }
+            }
+        },
+        loadOrder = {"movement.fly", "movement.noclip", "gui.main"}
+    }
 end
 
 -- Função para carregar um módulo específico
@@ -184,6 +219,16 @@ local function loadModule(modulePath, moduleName)
     return false
 end
 
+-- Função auxiliar para split de string
+local function splitString(str, delimiter)
+    local result = {}
+    local pattern = "[^" .. delimiter .. "]+"
+    for match in string.gmatch(str, pattern) do
+        table.insert(result, match)
+    end
+    return result
+end
+
 -- Função para carregar módulos baseado na configuração
 local function loadModules(config)
     if not config or not config.loadOrder then
@@ -194,7 +239,7 @@ local function loadModules(config)
     print("🔄 Carregando módulos conforme configuração...")
     
     for _, moduleKey in ipairs(config.loadOrder) do
-        local parts = string.split(moduleKey, ".")
+        local parts = splitString(moduleKey, ".")
         if #parts == 2 then
             local category = parts[1]
             local moduleName = parts[2]
@@ -205,8 +250,14 @@ local function loadModules(config)
                 if moduleConfig and moduleConfig.enabled and moduleConfig.path then
                     loadModule(moduleConfig.path, moduleKey)
                     wait(0.1) -- Pequena pausa entre carregamentos
+                else
+                    print("⚠️ Módulo " .. moduleKey .. " desabilitado ou não configurado")
                 end
+            else
+                print("⚠️ Categoria " .. category .. " desabilitada ou não configurada")
             end
+        else
+            warn("❌ Formato de módulo inválido: " .. moduleKey)
         end
     end
 end
@@ -322,24 +373,44 @@ print("⚙️ Carregando configuração...")
 local config = loadConfig()
 Admin.Config = config
 
-if config.settings and config.settings.showLoadMessages then
-    print("📋 Configuração:")
-    print("   - Módulos de movimento: " .. (config.movement.enabled and "✅" or "❌"))
-    print("   - Módulos de GUI: " .. (config.gui.enabled and "✅" or "❌"))
-    print("   - Total de módulos: " .. #config.loadOrder)
-end
+-- Verificar se a configuração foi carregada corretamente
+if not config or not config.loadOrder then
+    warn("❌ Configuração inválida! Tentando carregar módulos individualmente...")
+    -- Carregar módulos básicos diretamente
+    local success1 = loadModule("modules/movement/fly.lua", "movement.fly")
+    local success2 = loadModule("modules/movement/noclip.lua", "movement.noclip")
+    local success3 = loadModule("modules/gui/main.lua", "gui.main")
+    
+    if success3 then
+        wait(0.2)
+        pcall(function()
+            if Admin.GUI and Admin.GUI.Module then
+                Admin.GUI.Module.create()
+            end
+        end)
+    end
+else
+    if config.settings and config.settings.showLoadMessages then
+        print("📋 Configuração:")
+        print("   - Módulos de movimento: " .. (config.movement and config.movement.enabled and "✅" or "❌"))
+        print("   - Módulos de GUI: " .. (config.gui and config.gui.enabled and "✅" or "❌"))
+        print("   - Total de módulos: " .. (config.loadOrder and #config.loadOrder or 0))
+    end
 
--- Carregar módulos
-loadModules(config)
+    -- Carregar módulos
+    loadModules(config)
 
--- Criar GUI se habilitado
-if config.gui and config.gui.enabled and Admin.GUI and Admin.GUI.Module then
-    wait(0.2) -- Aguardar carregamento dos módulos
-    local success, error = pcall(function()
-        Admin.GUI.Module.create()
-    end)
-    if not success then
-        warn("❌ Erro ao criar GUI: " .. tostring(error))
+    -- Criar GUI se habilitado
+    if config.gui and config.gui.enabled and config.settings and config.settings.autoLoadGUI then
+        wait(0.2) -- Aguardar carregamento dos módulos
+        local success, error = pcall(function()
+            if Admin.GUI and Admin.GUI.Module then
+                Admin.GUI.Module.create()
+            end
+        end)
+        if not success then
+            warn("❌ Erro ao criar GUI: " .. tostring(error))
+        end
     end
 end
 
