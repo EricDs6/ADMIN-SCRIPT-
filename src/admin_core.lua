@@ -2176,6 +2176,6 @@ print("💡 Use os botões na GUI para ativar/desativar as funcionalidades por s
 print("📍 Painel aparece no canto esquerdo da tela.")
 print("🔧 Use o botão de minimizar (—) para transformar em botão flutuante.")
 print("🌈 Botão minimizado pisca e muda de cor no canto inferior direito!")
-end
+end -- Fecha M.start()
 
 return M
