@@ -1,161 +1,141 @@
--- Admin Script Modular - Loader Principal-- Loader do Admin Script via loadstring
+-- Admin Script Modular - Loader Principal
+-- Execução: loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
 
--- Execução: loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()-- Suporta diferentes executores: Synapse, KRNL, Script-Ware, etc.
+print("🚀 Carregando Admin Script Modular - Movimento...")
 
+-- Função para detectar loadstring disponível
+local function getLoadstring()
+    return loadstring or 
+           (getgenv and getgenv().loadstring) or 
+           (syn and syn.loadstring) or 
+           (_G and _G.loadstring) or
+           (getfenv and getfenv().loadstring)
+end
 
+-- Função para carregar módulos via HTTP com múltiplas APIs
+local function httpGet(url)
+    local ok, res
+    
+    -- Tentar syn.request (Synapse X)
+    if syn and syn.request then
+        ok, res = pcall(syn.request, {Url = url, Method = "GET"})
+        if ok and res and res.Success and res.Body then return res.Body end
+    end
+    
+    -- Tentar http.request (Script-Ware)
+    if http and http.request then
+        ok, res = pcall(http.request, {Url = url, Method = "GET"})
+        if ok and res and res.Body then return res.Body end
+    end
+    
+    -- Tentar http_request (KRNL)
+    if http_request then
+        ok, res = pcall(http_request, {Url = url, Method = "GET"})
+        if ok and res and (res.Body or res.body) then return res.Body or res.body end
+    end
+    
+    -- Tentar request (genérico)
+    if request then
+        ok, res = pcall(request, {Url = url, Method = "GET"})
+        if ok and res and (res.Body or res.body) then return res.Body or res.body end
+    end
+    
+    -- Fallback para game:HttpGet (menos confiável)
+    if game and game.HttpGet then
+        ok, res = pcall(function() return game:HttpGet(url) end)
+        if ok and res then return res end
+    end
+    
+    return nil
+end
 
-print("🚀 Carregando Admin Script Modular - Movimento...")local function httpGet(url)
-
-    -- Tenta usar APIs comuns dos executores
-
--- Configuração base no _G    local ok, res
-
-if not _G.AdminScript then    if syn and syn.request then
-
-    _G.AdminScript = {        ok, res = pcall(syn.request, {Url = url, Method = "GET"})
-
-        -- Serviços        if ok and res and res.Success and res.Body then return res.Body end
-
-        Services = {    end
-
-            Players = game:GetService("Players"),    if http and http.request then
-
-            UserInputService = game:GetService("UserInputService"),        ok, res = pcall(http.request, {Url = url, Method = "GET"})
-
-            RunService = game:GetService("RunService"),        if ok and res and res.Body then return res.Body end
-
-            TweenService = game:GetService("TweenService")    end
-
-        },    if http_request then
-
-                ok, res = pcall(http_request, {Url = url, Method = "GET"})
-
-        -- Player info        if ok and res and (res.Body or res.body) then return res.Body or res.body end
-
-        Player = game:GetService("Players").LocalPlayer,    end
-
-            if request then
-
-        -- Estado global        ok, res = pcall(request, {Url = url, Method = "GET"})
-
-        Connections = {},        if ok and res and (res.Body or res.body) then return res.Body or res.body end
-
-        OriginalValues = {},    end
-
-            if game and game.HttpGet then
-
-        -- GUI elementos        ok, res = pcall(function() return game:HttpGet(url) end)
-
-        GUI = {},        if ok and res then return res end
-
-            end
-
-        -- Estados dos módulos    error("Nenhuma API HTTP suportada encontrada para buscar: " .. url)
-
-        Movement = {end
-
+-- Configuração base no _G
+if not _G.AdminScript then
+    _G.AdminScript = {
+        -- Serviços
+        Services = {
+            Players = game:GetService("Players"),
+            UserInputService = game:GetService("UserInputService"),
+            RunService = game:GetService("RunService"),
+            TweenService = game:GetService("TweenService")
+        },
+        
+        -- Player info
+        Player = game:GetService("Players").LocalPlayer,
+        
+        -- Estado global
+        Connections = {},
+        OriginalValues = {},
+        
+        -- GUI elementos
+        GUI = {},
+        
+        -- Estados dos módulos
+        Movement = {
             flyEnabled = false,
-
-            noclipEnabled = false,-- URL bruto do módulo principal (ajuste para o seu repositório público)
-
-            flySpeed = 50-- Dica: hospede o conteúdo de src/admin_core.lua e substitua a URL abaixo
-
-        }local ADMIN_CORE_URL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/src/admin_core.lua"
-
-    }local ADMIN_CORE_FALLBACK = "https://cdn.jsdelivr.net/gh/EricDs6/ADMIN-SCRIPT-RBX@main/src/admin_core.lua"
-
+            noclipEnabled = false,
+            flySpeed = 50
+        }
+    }
 end
 
--- Verificar compilador disponível
-
-local Admin = _G.AdminScriptlocal compile = loadstring or _G and _G.loadstring
-
-local Player = Admin.Playerif not compile then
-
-local Services = Admin.Services    error("Seu executor não disponibiliza loadstring para compilar o módulo.")
-
-end
+local Admin = _G.AdminScript
+local Player = Admin.Player
+local Services = Admin.Services
 
 -- Atualizar referências do personagem
+local function updateCharacter()
+    Admin.Character = Player.Character or Player.CharacterAdded:Wait()
+    Admin.Humanoid = Admin.Character:WaitForChild("Humanoid")
+    Admin.HumanoidRootPart = Admin.Character:WaitForChild("HumanoidRootPart")
+end
 
-local function updateCharacter()-- Tentar carregar localmente primeiro (desenvolvimento), depois remoto
-
-    Admin.Character = Player.Character or Player.CharacterAdded:Wait()local src
-
-    Admin.Humanoid = Admin.Character:WaitForChild("Humanoid")if readfile then
-
-    Admin.HumanoidRootPart = Admin.Character:WaitForChild("HumanoidRootPart")    local ok, exists = pcall(function()
-
-end        return (isfile and isfile("src/admin_core.lua")) or (isfile and isfile("admin_core.lua"))
-
-    end)
-
--- Função para carregar módulos via HTTP    if ok and exists then
-
-local function loadModule(moduleName)        src = (isfile("src/admin_core.lua") and readfile("src/admin_core.lua")) or readfile("admin_core.lua")
-
-    local baseURL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/"    end
-
-    local url = baseURL .. moduleName .. ".lua"end
-
-    if not src then
-
-    print("📦 Carregando módulo: " .. moduleName)    -- tentar primário
-
-        src = httpGet(ADMIN_CORE_URL)
-
-    local success, result = pcall(function()    -- se ainda assim vier JSON/HTML, tentar fallback
-
-        return game:HttpGet(url)    if type(src) == "string" then
-
-    end)        local c = src:sub(1, 64)
-
-            local looksLikeJson = c:sub(1,1) == "{" or c:find("\"message\"%s*:")
-
-    if success and result then        local looksLikeHtml = c:find("<!DOCTYPE") or c:find("<html")
-
-        local moduleFunction = loadstring(result)        if looksLikeJson or looksLikeHtml then
-
-        if moduleFunction then            src = httpGet(ADMIN_CORE_FALLBACK)
-
-            moduleFunction()        end
-
-            print("✅ Módulo " .. moduleName .. " carregado com sucesso!")    end
-
-            return trueend
-
-        else
-
-            warn("❌ Falha ao compilar módulo: " .. moduleName)local chunk, err = compile(src)
-
-        endif not chunk then
-
-    else    local preview = (type(src) == "string" and src:sub(1, 120)) or tostring(src)
-
-        warn("❌ Falha ao carregar módulo: " .. moduleName)    error("Falha ao compilar admin_core: " .. tostring(err) .. "\nPrévia do conteúdo obtido: " .. tostring(preview))
-
-    endend
-
+-- Função para carregar módulos via HTTP
+local function loadModule(moduleName)
+    local baseURL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/modules/"
+    local url = baseURL .. moduleName .. ".lua"
     
+    print("📦 Carregando módulo: " .. moduleName)
+    
+    -- Obter loadstring compatível
+    local compile = getLoadstring()
+    if not compile then
+        warn("❌ Nenhuma função loadstring disponível no executor!")
+        warn("💡 Tente usar um executor como Synapse X, KRNL ou Script-Ware")
+        return false
+    end
+    
+    -- Baixar código do módulo
+    local result = httpGet(url)
+    if not result then
+        warn("❌ Falha ao baixar módulo: " .. moduleName)
+        warn("💡 Verifique sua conexão com a internet")
+        return false
+    end
+    
+    -- Compilar e executar
+    local success, moduleFunction = pcall(compile, result)
+    if success and moduleFunction then
+        local execSuccess, execError = pcall(moduleFunction)
+        if execSuccess then
+            print("✅ Módulo " .. moduleName .. " carregado com sucesso!")
+            return true
+        else
+            warn("❌ Erro ao executar módulo " .. moduleName .. ": " .. tostring(execError))
+        end
+    else
+        warn("❌ Falha ao compilar módulo " .. moduleName .. ": " .. tostring(moduleFunction))
+    end
+    
+    return false
+end
 
-    return falselocal module = chunk()
-
-endif type(module) == "table" and type(module.start) == "function" then
-
-    module.start()
-
--- Função de limpezaelse
-
-local function cleanup()    -- Caso o arquivo seja um script plano, apenas executa
-
-    -- Desconectar todas as conexões    if type(module) == "function" then
-
-    for name, connection in pairs(Admin.Connections) do        module()
-
-        if connection and typeof(connection) == "RBXScriptConnection" then    end
-
-            pcall(function() connection:Disconnect() end)end
-
+-- Função de limpeza
+local function cleanup()
+    -- Desconectar todas as conexões
+    for name, connection in pairs(Admin.Connections) do
+        if connection and typeof(connection) == "RBXScriptConnection" then
+            pcall(function() connection:Disconnect() end)
         end
     end
     Admin.Connections = {}

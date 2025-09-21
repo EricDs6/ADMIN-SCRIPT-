@@ -1,14 +1,30 @@
 -- Módulo de Movimento - Fly e Noclip
 -- Carregado via _G.AdminScript
 
+-- Verificar se AdminScript está disponível
 local Admin = _G.AdminScript
 if not Admin then
-    error("Sistema AdminScript não inicializado!")
+    warn("❌ Sistema AdminScript não inicializado!")
+    warn("💡 Execute primeiro o init.lua")
     return
 end
 
+-- Verificar se serviços estão disponíveis
 local Services = Admin.Services
 local Player = Admin.Player
+
+if not Services or not Player then
+    warn("❌ Serviços não disponíveis!")
+    return
+end
+
+-- Verificar se character está disponível
+if not Admin.Character or not Admin.HumanoidRootPart then
+    warn("❌ Personagem não encontrado!")
+    return
+end
+
+print("🎮 Inicializando módulo de movimento...")
 
 -- Criar GUI simples
 local function createGUI()
@@ -101,11 +117,11 @@ local function createGUI()
     
     -- Botões
     local flyButton = createButton("Voo: OFF", UDim2.new(0, 10, 0, 45), function()
-        toggleFly()
+        pcall(toggleFly)
     end)
     
     local noclipButton = createButton("Atravessar: OFF", UDim2.new(0, 10, 0, 85), function()
-        toggleNoclip()
+        pcall(toggleNoclip)
     end)
     
     -- Armazenar referências
@@ -113,10 +129,13 @@ local function createGUI()
     Admin.GUI.MainFrame = mainFrame
     Admin.GUI.FlyButton = flyButton
     Admin.GUI.NoclipButton = noclipButton
+    
+    print("🖼️ GUI criada com sucesso!")
 end
 
 -- Função para atualizar estado do botão
 local function updateButtonState(button, enabled, baseName)
+    if not button then return end
     if enabled then
         button.Text = baseName .. ": ON"
         button.BackgroundColor3 = Color3.fromRGB(80, 180, 80)
@@ -132,6 +151,12 @@ function toggleFly()
     updateButtonState(Admin.GUI.FlyButton, Admin.Movement.flyEnabled, "Voo")
     
     if Admin.Movement.flyEnabled then
+        -- Verificar se humanoidRootPart existe
+        if not Admin.HumanoidRootPart then
+            warn("❌ HumanoidRootPart não encontrado!")
+            return
+        end
+        
         -- Criar objetos de física
         local bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
@@ -150,20 +175,26 @@ function toggleFly()
         
         -- Loop de movimento
         Admin.Connections.Fly = Services.RunService.Heartbeat:Connect(function()
+            if not Admin.Movement.flyEnabled then return end
+            if not Admin.HumanoidRootPart or not Admin.HumanoidRootPart.Parent then return end
+            
             local moveVector = Vector3.new()
             
-            -- Controles WASD + Space/LeftControl
+            -- Controles WASD + Space/LeftControl (com verificação de segurança)
+            local camera = workspace.CurrentCamera
+            if not camera then return end
+            
             if Services.UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                moveVector = moveVector + workspace.CurrentCamera.CFrame.LookVector
+                moveVector = moveVector + camera.CFrame.LookVector
             end
             if Services.UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                moveVector = moveVector - workspace.CurrentCamera.CFrame.LookVector
+                moveVector = moveVector - camera.CFrame.LookVector
             end
             if Services.UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                moveVector = moveVector - workspace.CurrentCamera.CFrame.RightVector
+                moveVector = moveVector - camera.CFrame.RightVector
             end
             if Services.UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                moveVector = moveVector + workspace.CurrentCamera.CFrame.RightVector
+                moveVector = moveVector + camera.CFrame.RightVector
             end
             if Services.UserInputService:IsKeyDown(Enum.KeyCode.Space) then
                 moveVector = moveVector + Vector3.new(0, 1, 0)
@@ -172,8 +203,12 @@ function toggleFly()
                 moveVector = moveVector - Vector3.new(0, 1, 0)
             end
             
-            bodyVelocity.Velocity = moveVector * Admin.Movement.flySpeed
-            bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+            if bodyVelocity and bodyVelocity.Parent then
+                bodyVelocity.Velocity = moveVector * Admin.Movement.flySpeed
+            end
+            if bodyGyro and bodyGyro.Parent then
+                bodyGyro.CFrame = camera.CFrame
+            end
         end)
         
         print("✈️ Voo ativado! Use WASD + Espaço/Ctrl para voar")
@@ -206,6 +241,9 @@ function toggleNoclip()
     if Admin.Movement.noclipEnabled then
         -- Loop para desabilitar colisão
         Admin.Connections.Noclip = Services.RunService.Stepped:Connect(function()
+            if not Admin.Movement.noclipEnabled then return end
+            if not Admin.Character then return end
+            
             for _, part in pairs(Admin.Character:GetChildren()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = false
@@ -222,9 +260,11 @@ function toggleNoclip()
         end
         
         -- Restaurar colisão
-        for _, part in pairs(Admin.Character:GetChildren()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                part.CanCollide = true
+        if Admin.Character then
+            for _, part in pairs(Admin.Character:GetChildren()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.CanCollide = true
+                end
             end
         end
         
@@ -232,8 +272,12 @@ function toggleNoclip()
     end
 end
 
--- Criar GUI
-createGUI()
+-- Criar GUI com proteção de erro
+local success, error = pcall(createGUI)
+if not success then
+    warn("❌ Erro ao criar GUI: " .. tostring(error))
+    return
+end
 
 print("✅ Módulo de Movimento carregado!")
 print("💡 Controles: WASD + Espaço/Ctrl para voar")
