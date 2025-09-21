@@ -59,6 +59,8 @@ local speedHackSpeed = 100
 local jumpHackPower = 200
 local minimizedButton = nil -- Botão flutuante quando minimizado
 local colorTweenConnection = nil -- Conexão do efeito de cor pulsante
+-- APIs de seções montadas
+local sectionApis = {}
 -- Objetos de física
 local bodyVelocity = Instance.new("BodyVelocity")
 bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
@@ -443,6 +445,59 @@ end
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     applySearchFilter(searchBox.Text)
 end)
+
+-- Loader simples para seções (tenta readfile; se não, busca no GitHub)
+local function httpGet(url)
+    local ok, res
+    if syn and syn.request then
+        ok, res = pcall(syn.request, {Url = url, Method = "GET"})
+        if ok and res and res.Success and res.Body then return res.Body end
+    end
+    if http and http.request then
+        ok, res = pcall(http.request, {Url = url, Method = "GET"})
+        if ok and res and res.Body then return res.Body end
+    end
+    if http_request then
+        ok, res = pcall(http_request, {Url = url, Method = "GET"})
+        if ok and res and (res.Body or res.body) then return res.Body or res.body end
+    end
+    if request then
+        ok, res = pcall(request, {Url = url, Method = "GET"})
+        if ok and res and (res.Body or res.body) then return res.Body or res.body end
+    end
+    if game and game.HttpGet then
+        ok, res = pcall(function() return game:HttpGet(url) end)
+        if ok and res then return res end
+    end
+    return nil
+end
+
+local function loadSection(name)
+    local compile = loadstring or (_G and _G.loadstring)
+    if readfile then
+        local path = "src/sections/" .. name .. ".lua"
+        local ok, exists = pcall(function() return isfile and isfile(path) end)
+        if ok and exists and compile then
+            local src = readfile(path)
+            local chunk = compile(src)
+            if chunk then
+                return pcall(chunk)
+            end
+        end
+    end
+    -- Fallback GitHub
+    local base = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/src/sections/"
+    local src = httpGet(base .. name .. ".lua")
+    if src and compile then
+        local chunk, err = compile(src)
+        if chunk then
+            return pcall(chunk)
+        else
+            warn("Falha ao compilar seção " .. name .. ": " .. tostring(err))
+        end
+    end
+    return false, nil
+end
 local function createValueControl(labelText, initialValue, minValue, maxValue, stepValue, position, parent)
     -- Container para o controle de valor
     local container = Instance.new("Frame")
@@ -559,25 +614,33 @@ searchNote.Font = Enum.Font.Gotham
 searchNote.TextXAlignment = Enum.TextXAlignment.Left
 searchNote.Parent = contentFrame
 yOffset = yOffset + 20
--- Seção Movimento
-local movimentoLabel = createLabel("Movimento", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local flyButton = createButton("Voo: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local flyControl = createValueControl("Velocidade", flySpeed, 10, 500, 10, UDim2.new(0, 20, 0, yOffset))
-yOffset = yOffset + 45
-local noclipButton = createButton("Sem Colisão: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local speedHackButton = createButton("Velocidade Hack: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local speedHackControl = createValueControl("Velocidade", speedHackSpeed, 50, 500, 10, UDim2.new(0, 20, 0, yOffset))
-yOffset = yOffset + 45
-local jumpHackButton = createButton("Pulo Hack: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local jumpHackControl = createValueControl("Força", jumpHackPower, 50, 1000, 10, UDim2.new(0, 20, 0, yOffset))
-yOffset = yOffset + 45
-local infiniteJumpButton = createButton("Pulo Infinito: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
+-- Seção Movimento (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, UserInputService = UserInputService, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = {
+            createButton = createButton,
+            createLabel = createLabel,
+            createValueControl = createValueControl,
+            updateButtonState = updateButtonState,
+        },
+        yOffset = yOffset,
+    }
+    local ok, movement = loadSection("movement")
+    if ok and movement and type(movement) == "table" and type(movement.mount) == "function" then
+        sectionApis.movement = movement.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Movimento. Código: " .. tostring(movement))
+    end
+end
 -- Seção Combate
 local combateLabel = createLabel("Combate", UDim2.new(0, 10, 0, yOffset))
 yOffset = yOffset + 35
@@ -688,20 +751,15 @@ button.BackgroundColor3 = Color3.fromRGB(50, 54, 70)
 button.TextColor3 = Color3.fromRGB(230,230,230)
 end
 end
-local function updateFlySpeedLabel()
-    flyControl.updateLabel(flySpeed)
-end
-local function updateSpeedHackLabel()
-    speedHackControl.updateLabel(speedHackSpeed)
-end
-local function updateJumpHackLabel()
-    jumpHackControl.updateLabel(jumpHackPower)
-end
+-- Labels de movimento são gerenciados no módulo da seção
 -- Variáveis para transportar partes soltas
 local carriedParts = {}
 local carryOffsets = {}
 
+-- Movimento migrou para módulo; manter stubs temporários por compatibilidade
 local function toggleFly()
+    warn("toggleFly movido para seção Movimento")
+end
 flyEnabled = not flyEnabled
 updateButtonState(flyButton, flyEnabled, "Voo")
 if flyEnabled then
@@ -828,26 +886,7 @@ else
 end
 end
 local function toggleNoclip()
-noclipEnabled = not noclipEnabled
-updateButtonState(noclipButton, noclipEnabled, "Sem Colisão")
-if noclipEnabled then
-connections.noclip = RunService.Stepped:Connect(function()
-for _, part in pairs(character:GetChildren()) do
-if part:IsA("BasePart") then
-part.CanCollide = false
-end
-end
-end)
-else
-if connections.noclip then
-connections.noclip:Disconnect()
-end
-for _, part in pairs(character:GetChildren()) do
-if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-part.CanCollide = true
-end
-end
-end
+    warn("toggleNoclip movido para seção Movimento")
 end
 local function toggleGod()
 godEnabled = not godEnabled
@@ -889,47 +928,13 @@ if connections.clickTp then connections.clickTp:Disconnect() end
 end
 end
 local function toggleSpeedHack()
-speedHackEnabled = not speedHackEnabled
-updateButtonState(speedHackButton, speedHackEnabled, "Velocidade Hack")
-if speedHackEnabled then
-originalValues.walkSpeed = humanoid.WalkSpeed
-humanoid.WalkSpeed = speedHackSpeed
-else
-humanoid.WalkSpeed = originalValues.walkSpeed or 16
-end
+    warn("toggleSpeedHack movido para seção Movimento")
 end
 local function toggleJumpHack()
-jumpHackEnabled = not jumpHackEnabled
-updateButtonState(jumpHackButton, jumpHackEnabled, "Pulo Hack")
-if jumpHackEnabled then
-originalValues.jumpPower = humanoid.JumpPower or humanoid.JumpHeight
-if humanoid:FindFirstChild("JumpPower") then
-humanoid.JumpPower = jumpHackPower
-else
-humanoid.JumpHeight = jumpHackPower
-end
-else
-if humanoid:FindFirstChild("JumpPower") then
-humanoid.JumpPower = originalValues.jumpPower or 50
-else
-humanoid.JumpHeight = originalValues.jumpPower or 7.2
-end
-end
+    warn("toggleJumpHack movido para seção Movimento")
 end
 local function toggleInfiniteJump()
-infiniteJumpEnabled = not infiniteJumpEnabled
-updateButtonState(infiniteJumpButton, infiniteJumpEnabled, "Pulo Infinito")
-if infiniteJumpEnabled then
-connections.infiniteJump = UserInputService.JumpRequest:Connect(function()
-if infiniteJumpEnabled then
-humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-end
-end)
-else
-if connections.infiniteJump then
-connections.infiniteJump:Disconnect()
-end
-end
+    warn("toggleInfiniteJump movido para seção Movimento")
 end
 local function toggleInvisible()
 invisibleEnabled = not invisibleEnabled
@@ -1903,6 +1908,7 @@ off(toggleClickTp, clickTpEnabled)
 off(toggleSpeedHack, speedHackEnabled)
 off(toggleJumpHack, jumpHackEnabled)
 off(toggleInfiniteJump, infiniteJumpEnabled)
+-- As três acima agora pertencem ao módulo de Movimento; reset via API quando disponível
 off(toggleInvisible, invisibleEnabled)
 off(toggleFullBright, fullBrightEnabled)
 off(toggleRainbow, rainbowEnabled)
@@ -1927,6 +1933,7 @@ off(toggleNoRecoil, noRecoilEnabled)
 off(toggleBigHead, bigHeadOn)
 if bodyVelocity.Parent then bodyVelocity.Parent = nil end
 if bodyGyro.Parent then bodyGyro.Parent = nil end
+-- Movers pertencem à seção de Movimento
 -- Interromper efeito de cor pulsante
 if colorTweenConnection then
     pcall(function() colorTweenConnection:Disconnect() end)
@@ -1953,25 +1960,17 @@ end
 end
 connections = {}
 originalValues = {}
+-- Delegar resets das seções
+if sectionApis and sectionApis.movement and sectionApis.movement.reset then
+    pcall(sectionApis.movement.reset)
+end
 end
 local function onCharacterAdded(newChar)
 if scriptTerminated then return end
 character = newChar
 humanoid = newChar:WaitForChild("Humanoid")
 humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
-if flyEnabled then
-pcall(function() bodyVelocity:Destroy() end)
-pcall(function() bodyGyro:Destroy() end)
-bodyVelocity = Instance.new("BodyVelocity")
-bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
-bodyVelocity.Velocity = Vector3.new()
-bodyVelocity.Parent = humanoidRootPart
-bodyGyro = Instance.new("BodyGyro")
-bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)
-bodyGyro.P = 3000
-bodyGyro.D = 500
-bodyGyro.Parent = humanoidRootPart
-end
+-- Movers de voo são geridos pela seção Movimento
 if spinEnabled then
 local spinGyro = Instance.new("BodyAngularVelocity")
 spinGyro.AngularVelocity = Vector3.new(0, 50, 0)
@@ -2023,13 +2022,14 @@ end
 end
 end
 -- Conexões dos botões
-flyButton.MouseButton1Click:Connect(toggleFly)
-noclipButton.MouseButton1Click:Connect(toggleNoclip)
+-- Notificar seções após respawn
+if sectionApis and sectionApis.movement and sectionApis.movement.onCharacterAdded then
+    pcall(sectionApis.movement.onCharacterAdded, character)
+end
+
+-- Conexões dos botões
 godButton.MouseButton1Click:Connect(toggleGod)
 clickTpButton.MouseButton1Click:Connect(toggleClickTp)
-speedHackButton.MouseButton1Click:Connect(toggleSpeedHack)
-jumpHackButton.MouseButton1Click:Connect(toggleJumpHack)
-infiniteJumpButton.MouseButton1Click:Connect(toggleInfiniteJump)
 invisibleButton.MouseButton1Click:Connect(toggleInvisible)
 fullBrightButton.MouseButton1Click:Connect(toggleFullBright)
 rainbowButton.MouseButton1Click:Connect(toggleRainbow)
@@ -2065,31 +2065,7 @@ freezeAllButton.MouseButton1Click:Connect(toggleFreezeAll)
 autoFireButton.MouseButton1Click:Connect(toggleAutoFire)
 noRecoilButton.MouseButton1Click:Connect(toggleNoRecoil)
 bigHeadButton.MouseButton1Click:Connect(toggleBigHead)
--- Conexões dos botões de ajuste de valor
-flyControl.minusButton.MouseButton1Click:Connect(function()
-    flySpeed = math.max(10, flySpeed - 10)
-    updateFlySpeedLabel()
-end)
-flyControl.plusButton.MouseButton1Click:Connect(function()
-    flySpeed = math.min(500, flySpeed + 10)
-    updateFlySpeedLabel()
-end)
-speedHackControl.minusButton.MouseButton1Click:Connect(function()
-    speedHackSpeed = math.max(50, speedHackSpeed - 10)
-    updateSpeedHackLabel()
-end)
-speedHackControl.plusButton.MouseButton1Click:Connect(function()
-    speedHackSpeed = math.min(500, speedHackSpeed + 10)
-    updateSpeedHackLabel()
-end)
-jumpHackControl.minusButton.MouseButton1Click:Connect(function()
-    jumpHackPower = math.max(50, jumpHackPower - 10)
-    updateJumpHackLabel()
-end)
-jumpHackControl.plusButton.MouseButton1Click:Connect(function()
-    jumpHackPower = math.min(1000, jumpHackPower + 10)
-    updateJumpHackLabel()
-end)
+-- Controles de valor da seção Movimento estão dentro do módulo
 -- Comandos de chat
 connections.chat = player.Chatted:Connect(function(message)
 if scriptTerminated then return end
