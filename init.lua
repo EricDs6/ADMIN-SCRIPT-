@@ -152,22 +152,9 @@ local function cleanup()
     
     -- Restaurar valores originais
     if Admin.Humanoid and Admin.OriginalValues then
-        -- Restaurar saúde
-        if Admin.OriginalValues.Health and Admin.OriginalValues.MaxHealth then
-            Admin.Humanoid.MaxHealth = Admin.OriginalValues.MaxHealth
-            Admin.Humanoid.Health = math.max(Admin.OriginalValues.Health, Admin.OriginalValues.MaxHealth * 0.5)
-        end
-        
         -- Restaurar PlatformStand
         if Admin.OriginalValues.PlatformStand ~= nil then
             Admin.Humanoid.PlatformStand = Admin.OriginalValues.PlatformStand
-        end
-        
-        -- Restaurar estados do humanoid
-        if Admin.OriginalValues.StatesEnabled then
-            for state, wasEnabled in pairs(Admin.OriginalValues.StatesEnabled) do
-                pcall(function() Admin.Humanoid:SetStateEnabled(state, wasEnabled) end)
-            end
         end
         
         -- Restaurar velocidade de caminhada
@@ -203,6 +190,9 @@ local function cleanup()
     print("🧹 Sistema limpo!")
     print("🛡️ Todos os valores foram restaurados!")
 end
+
+-- Tornar cleanup acessível globalmente
+_G.AdminScript.Cleanup = cleanup
 
 -- Comando de limpeza via chat
 Admin.Connections.Chat = Player.Chatted:Connect(function(message)

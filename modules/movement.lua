@@ -58,20 +58,130 @@ local function createGUI()
     stroke.Thickness = 2
     stroke.Parent = mainFrame
     
+    -- Barra de título
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 35)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 8)
+    titleCorner.Parent = titleBar
+    
     -- Título
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 35)
-    title.Position = UDim2.new(0, 0, 0, 0)
-    title.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    title.Size = UDim2.new(1, -80, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
     title.Text = "✈️ Movimento"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 14
-    title.Parent = mainFrame
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = titleBar
     
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 8)
-    titleCorner.Parent = title
+    -- Botão Minimizar
+    local minimizeBtn = Instance.new("TextButton")
+    minimizeBtn.Size = UDim2.new(0, 30, 0, 25)
+    minimizeBtn.Position = UDim2.new(1, -65, 0, 5)
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    minimizeBtn.Text = "—"
+    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeBtn.Font = Enum.Font.GothamBold
+    minimizeBtn.TextSize = 14
+    minimizeBtn.BorderSizePixel = 0
+    minimizeBtn.Parent = titleBar
+    
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0, 4)
+    minCorner.Parent = minimizeBtn
+    
+    -- Botão Fechar
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 25)
+    closeBtn.Position = UDim2.new(1, -30, 0, 5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 12
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = titleBar
+    
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 4)
+    closeCorner.Parent = closeBtn
+    
+    -- Hover effects
+    minimizeBtn.MouseEnter:Connect(function()
+        minimizeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+    end)
+    minimizeBtn.MouseLeave:Connect(function()
+        minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    end)
+    
+    closeBtn.MouseEnter:Connect(function()
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+    end)
+    closeBtn.MouseLeave:Connect(function()
+        closeBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+    end)
+    
+    -- Eventos dos botões
+    minimizeBtn.MouseButton1Click:Connect(function()
+        mainFrame.Visible = not mainFrame.Visible
+        if mainFrame.Visible then
+            minimizeBtn.Text = "—"
+        else
+            -- Criar botão flutuante minimizado
+            if not Admin.GUI.MinimizedButton then
+                local floatingBtn = Instance.new("TextButton")
+                floatingBtn.Size = UDim2.new(0, 60, 0, 30)
+                floatingBtn.Position = UDim2.new(1, -80, 0, 20)
+                floatingBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                floatingBtn.Text = "✈️ Admin"
+                floatingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                floatingBtn.Font = Enum.Font.Gotham
+                floatingBtn.TextSize = 10
+                floatingBtn.BorderSizePixel = 0
+                floatingBtn.Parent = screenGui
+                
+                local floatCorner = Instance.new("UICorner")
+                floatCorner.CornerRadius = UDim.new(0, 6)
+                floatCorner.Parent = floatingBtn
+                
+                floatingBtn.MouseButton1Click:Connect(function()
+                    mainFrame.Visible = true
+                    floatingBtn:Destroy()
+                    Admin.GUI.MinimizedButton = nil
+                    minimizeBtn.Text = "—"
+                end)
+                
+                Admin.GUI.MinimizedButton = floatingBtn
+            end
+        end
+    end)
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        -- Limpar tudo e fechar
+        if _G.AdminScript and _G.AdminScript.Cleanup then
+            _G.AdminScript.Cleanup()
+        else
+            -- Fallback caso não tenha acesso à função global
+            if Admin.GUI.ScreenGui then
+                Admin.GUI.ScreenGui:Destroy()
+            end
+        end
+    end)
+    
+    -- Container para conteúdo
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Size = UDim2.new(1, 0, 1, -35)
+    contentFrame.Position = UDim2.new(0, 0, 0, 35)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = mainFrame
     
     -- Função para criar botões
     local function createButton(text, position, callback)
@@ -84,7 +194,7 @@ local function createGUI()
         button.Font = Enum.Font.Gotham
         button.TextSize = 12
         button.AutoButtonColor = false
-        button.Parent = mainFrame
+        button.Parent = contentFrame
         
         -- Estilo
         local btnCorner = Instance.new("UICorner")
@@ -116,11 +226,11 @@ local function createGUI()
     end
     
     -- Botões
-    local flyButton = createButton("Voo: OFF", UDim2.new(0, 10, 0, 45), function()
+    local flyButton = createButton("Voo: OFF", UDim2.new(0, 10, 0, 10), function()
         pcall(toggleFly)
     end)
     
-    local noclipButton = createButton("Atravessar: OFF", UDim2.new(0, 10, 0, 85), function()
+    local noclipButton = createButton("Atravessar: OFF", UDim2.new(0, 10, 0, 50), function()
         pcall(toggleNoclip)
     end)
     
@@ -157,29 +267,10 @@ function toggleFly()
             return
         end
         
-        -- Salvar valores originais para restaurar depois
+        -- Salvar valores originais para restaurar depois (sem mexer em saúde)
         if Admin.Humanoid then
-            Admin.OriginalValues.Health = Admin.Humanoid.Health
-            Admin.OriginalValues.MaxHealth = Admin.Humanoid.MaxHealth
             Admin.OriginalValues.PlatformStand = Admin.Humanoid.PlatformStand
-            
-            -- Proteger contra dano durante o voo
-            Admin.Humanoid.MaxHealth = math.huge
-            Admin.Humanoid.Health = math.huge
             Admin.Humanoid.PlatformStand = true
-            
-            -- Desabilitar estados que causam dano
-            local statesEnabled = {}
-            for _, state in pairs({
-                Enum.HumanoidStateType.Freefall,
-                Enum.HumanoidStateType.FallingDown,
-                Enum.HumanoidStateType.Ragdoll,
-                Enum.HumanoidStateType.PlatformStanding
-            }) do
-                statesEnabled[state] = Admin.Humanoid:GetStateEnabled(state)
-                pcall(function() Admin.Humanoid:SetStateEnabled(state, false) end)
-            end
-            Admin.OriginalValues.StatesEnabled = statesEnabled
         end
         
         -- Criar objetos de física
@@ -197,19 +288,6 @@ function toggleFly()
         -- Armazenar referências
         Admin.Movement.BodyVelocity = bodyVelocity
         Admin.Movement.BodyGyro = bodyGyro
-        
-        -- Conexão para manter a saúde durante o voo
-        Admin.Connections.FlyHealthProtection = Services.RunService.Heartbeat:Connect(function()
-            if Admin.Movement.flyEnabled and Admin.Humanoid then
-                if Admin.Humanoid.Health < Admin.Humanoid.MaxHealth then
-                    Admin.Humanoid.Health = Admin.Humanoid.MaxHealth
-                end
-                -- Forçar estado seguro
-                if Admin.Humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
-                    pcall(function() Admin.Humanoid:ChangeState(Enum.HumanoidStateType.Physics) end)
-                end
-            end
-        end)
         
         -- Loop de movimento
         Admin.Connections.Fly = Services.RunService.Heartbeat:Connect(function()
@@ -250,18 +328,11 @@ function toggleFly()
         end)
         
         print("✈️ Voo ativado! Use WASD + Espaço/Ctrl para voar")
-        print("🛡️ Proteção contra dano ativada!")
     else
         -- Desabilitar fly
         if Admin.Connections.Fly then
             Admin.Connections.Fly:Disconnect()
             Admin.Connections.Fly = nil
-        end
-        
-        -- Desabilitar proteção de saúde
-        if Admin.Connections.FlyHealthProtection then
-            Admin.Connections.FlyHealthProtection:Disconnect()
-            Admin.Connections.FlyHealthProtection = nil
         end
         
         if Admin.Movement.BodyVelocity then
@@ -274,26 +345,11 @@ function toggleFly()
             Admin.Movement.BodyGyro = nil
         end
         
-        -- Restaurar valores originais
+        -- Restaurar valores originais (sem mexer em saúde)
         if Admin.Humanoid and Admin.OriginalValues then
-            -- Restaurar saúde gradualmente para evitar morte súbita
-            if Admin.OriginalValues.Health and Admin.OriginalValues.MaxHealth then
-                Admin.Humanoid.MaxHealth = Admin.OriginalValues.MaxHealth
-                -- Garantir que não morra ao restaurar
-                local targetHealth = math.max(Admin.OriginalValues.Health, Admin.OriginalValues.MaxHealth * 0.5)
-                Admin.Humanoid.Health = targetHealth
-            end
-            
             -- Restaurar PlatformStand
             if Admin.OriginalValues.PlatformStand ~= nil then
                 Admin.Humanoid.PlatformStand = Admin.OriginalValues.PlatformStand
-            end
-            
-            -- Restaurar estados do humanoid
-            if Admin.OriginalValues.StatesEnabled then
-                for state, wasEnabled in pairs(Admin.OriginalValues.StatesEnabled) do
-                    pcall(function() Admin.Humanoid:SetStateEnabled(state, wasEnabled) end)
-                end
             end
         end
         
