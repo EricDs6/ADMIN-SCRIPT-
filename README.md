@@ -15,12 +15,13 @@ Isso irá buscar `init.lua` que, por sua vez, baixa `src/admin_core.lua` e execu
 ## Estrutura
 
 - `src/admin_core.lua`: Módulo principal, expõe `start()` que monta a GUI e todas as funcionalidades.
-- `init.lua`: Loader resiliente que usa `syn.request`/`http.request`/`request`/`game:HttpGet` para buscar o módulo remoto.
+- `init.lua`: Loader resiliente que usa `syn.request`/`http.request`/`http_request`/`request`/`game:HttpGet` para buscar o módulo remoto, e valida a presença de `loadstring`.
 - `admin.txt`: Versão original do script (referência).
 
 ## Observações
 
 - Alguns executores exigem habilitar HTTP (`HttpGetEnabled`) e/ou usam diferentes APIs de rede. O loader tenta múltiplas abordagens automaticamente.
+ - Se seu executor não expõe `loadstring`, o loader emitirá um erro informando a limitação.
 - Se você for usar localmente, pode simplesmente executar `src/admin_core.lua` diretamente no executor (ele retorna uma tabela `M` com `M.start()`). Exemplo:
 
 ```

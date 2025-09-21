@@ -275,12 +275,13 @@ dragButton.MouseEnter:Connect(function()
     dragStroke.Transparency = 0.4
     dragButton:TweenSize(UDim2.new(0, 36, 0, 36), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
 end)
-dragButton.MouseButton1Up:Connect(function()
+    dragButton.MouseButton1Up:Connect(function()
     if isDragging then
         isDragging = false
         dragStartPos = nil
         guiStartPos = nil
-        mainFrame.ScrollingEnabled = true
+        -- Corrige: ScrollingEnabled pertence ao contentFrame (ScrollingFrame)
+        contentFrame.ScrollingEnabled = true
 
         -- Restaurar aparência normal
         dragButton.BackgroundColor3 = Color3.fromRGB(70, 80, 100)
@@ -704,6 +705,13 @@ local function toggleFly()
 flyEnabled = not flyEnabled
 updateButtonState(flyButton, flyEnabled, "Voo")
 if flyEnabled then
+    -- Desabilitar estados que causam dano de queda / ragdoll
+    originalValues.stateEnabled = originalValues.stateEnabled or {}
+    for _, st in ipairs({Enum.HumanoidStateType.Freefall, Enum.HumanoidStateType.FallingDown, Enum.HumanoidStateType.Ragdoll}) do
+        originalValues.stateEnabled[st] = humanoid:GetStateEnabled(st)
+        pcall(function() humanoid:SetStateEnabled(st, false) end)
+    end
+
     bodyVelocity.Parent = humanoidRootPart
     bodyGyro.Parent = humanoidRootPart
     
@@ -760,6 +768,10 @@ if flyEnabled then
         
         bodyVelocity.Velocity = moveVector * flySpeed
         bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+        -- Evitar entrar em estados que causam dano de queda
+        if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.RunningNoPhysics then
+            pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) end)
+        end
         
         -- Mover partes carregadas junto com o jogador
         for i, part in pairs(carriedParts) do
@@ -785,6 +797,22 @@ else
     end
     bodyVelocity.Parent = nil
     bodyGyro.Parent = nil
+    -- Restaurar estados do Humanoid
+    if originalValues.stateEnabled then
+        for st, wasEnabled in pairs(originalValues.stateEnabled) do
+            pcall(function() humanoid:SetStateEnabled(st, wasEnabled) end)
+        end
+        originalValues.stateEnabled = nil
+    end
+    -- Pouso suave: raycast para o chão e reduzir queda brusca
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {character}
+    local result = workspace:Raycast(humanoidRootPart.Position, Vector3.new(0, -1000, 0), rayParams)
+    if result then
+        humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position.X, result.Position.Y + 3, humanoidRootPart.Position.Z)
+    end
+    humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
     
     -- Soltar todas as partes carregadas
     for _, part in pairs(carriedParts) do
@@ -1158,7 +1186,7 @@ updateButtonState(followPlayerButton, followEnabledFlag, "Seguir Jogador")
 if followEnabledFlag then
 followTarget = findClosestPlayer()
 if connections.follow then connections.follow:Disconnect() end
-local FOLLOW_DISTANCE = 5
+local HOVER_HEIGHT = 6 -- altura acima da cabeça do alvo
 local LERP_ALPHA = 0.35
 connections.follow = RunService.Heartbeat:Connect(function()
 if not followEnabledFlag then return end
@@ -1166,9 +1194,13 @@ if not isValidTarget(followTarget) then
 followTarget = findClosestPlayer()
 if not followTarget then return end
 end
-local targetHRP = followTarget.Character.HumanoidRootPart
-local desired = targetHRP.CFrame * CFrame.new(0, 0, FOLLOW_DISTANCE)
-local lookAt = CFrame.new(desired.Position, targetHRP.Position)
+local targetChar = followTarget.Character
+local targetHead = targetChar and targetChar:FindFirstChild("Head")
+local refPart = targetHead or targetChar:FindFirstChild("HumanoidRootPart")
+if not refPart then return end
+local headPos = refPart.Position
+local desiredPos = headPos + Vector3.new(0, HOVER_HEIGHT, 0)
+local lookAt = CFrame.new(desiredPos, headPos)
 humanoidRootPart.CFrame = humanoidRootPart.CFrame:Lerp(lookAt, LERP_ALPHA)
 end)
 else
@@ -1818,9 +1850,14 @@ end
 end)
 end
 end
+-- Declaração antecipada para permitir referência segura
+local resetAllFeatures
+
 local function terminateScript()
 if scriptTerminated then return end
-pcall(resetAllFeatures)
+if type(resetAllFeatures) == "function" then
+    pcall(resetAllFeatures)
+end
 scriptTerminated = true
 if screenGui and screenGui.Parent then
 pcall(function() screenGui:Destroy() end)
@@ -1855,7 +1892,7 @@ connections[k] = nil
 end
 print("✅ Script encerrado com sucesso! Todas as funcionalidades foram desativadas.")
 end
-local function resetAllFeatures()
+resetAllFeatures = function()
 local function off(fn, cond)
 if cond then pcall(fn) end
 end
@@ -2174,7 +2211,8 @@ local function setupDragSystem()
             isDragging = true
             dragStartPos = UserInputService:GetMouseLocation()
             guiStartPos = mainFrame.Position
-            mainFrame.ScrollingEnabled = false
+            -- Corrige: ScrollingEnabled pertence ao contentFrame (ScrollingFrame)
+            contentFrame.ScrollingEnabled = false
 
             -- Indicação visual de arrastar ativo
             dragButton.BackgroundColor3 = Color3.fromRGB(120, 130, 150)
@@ -2210,7 +2248,8 @@ local function setupDragSystem()
             isDragging = false
             dragStartPos = nil
             guiStartPos = nil
-            mainFrame.ScrollingEnabled = true
+            -- Corrige: ScrollingEnabled pertence ao contentFrame (ScrollingFrame)
+            contentFrame.ScrollingEnabled = true
 
             -- Restaurar aparência normal
             dragButton.BackgroundColor3 = Color3.fromRGB(70, 80, 100)

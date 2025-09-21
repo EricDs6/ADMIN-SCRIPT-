@@ -12,6 +12,10 @@ local function httpGet(url)
         ok, res = pcall(http.request, {Url = url, Method = "GET"})
         if ok and res and res.Body then return res.Body end
     end
+    if http_request then
+        ok, res = pcall(http_request, {Url = url, Method = "GET"})
+        if ok and res and (res.Body or res.body) then return res.Body or res.body end
+    end
     if request then
         ok, res = pcall(request, {Url = url, Method = "GET"})
         if ok and res and (res.Body or res.body) then return res.Body or res.body end
@@ -28,7 +32,14 @@ end
 local ADMIN_CORE_URL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/src/admin_core.lua"
 
 local src = httpGet(ADMIN_CORE_URL)
-local chunk, err = loadstring(src)
+
+-- Verificar compilador disponível
+local compile = loadstring or _G and _G.loadstring
+if not compile then
+    error("Seu executor não disponibiliza loadstring para compilar o módulo.")
+end
+
+local chunk, err = compile(src)
 if not chunk then error("Falha ao compilar admin_core: " .. tostring(err)) end
 
 local module = chunk()
