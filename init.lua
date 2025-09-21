@@ -57,7 +57,9 @@ _G.AdminScript = {
         autoLoadGUI = true,
         defaultFlySpeed = 50,
         chatCommands = true,
-        disableOnDeath = true
+        disableOnDeath = true,
+        diagnosticsCoreGui = false,
+        diagnosticsVerbosity = 1
     }
 }
 
@@ -309,6 +311,34 @@ local function start()
         pcall(Admin.GUI.main.show)
     end
     print("[INIT] ✅ Admin Script v" .. Admin.version .. " pronto")
+
+    -- Modo diagnóstico: monitorar CoreGui para identificar criadores de scripts efêmeros
+    if Admin.Config.diagnosticsCoreGui then
+        local CoreGui = game:GetService("CoreGui")
+        local function describe(inst)
+            local ok, path = pcall(function()
+                local p = {}
+                local node = inst
+                local n = 0
+                while node and n < 6 do
+                    table.insert(p, 1, node.Name .. "(" .. node.ClassName .. ")")
+                    node = node.Parent
+                    n = n + 1
+                end
+                return table.concat(p, "/")
+            end)
+            return ok and path or (inst.ClassName .. "?" )
+        end
+        local function onAdded(child)
+            local msg = "[DIAG] CoreGui added: " .. describe(child)
+            if Admin.Config.diagnosticsVerbosity > 0 then print(msg) end
+        end
+        Admin.Connections.CoreGuiAdded = CoreGui.ChildAdded:Connect(onAdded)
+        Admin.Connections.CoreGuiDescAdded = CoreGui.DescendantAdded:Connect(function(d)
+            if Admin.Config.diagnosticsVerbosity > 1 then print("[DIAG] CoreGui desc: " .. describe(d)) end
+        end)
+        print("[DIAG] Monitoramento de CoreGui habilitado")
+    end
 end
 
 start()
