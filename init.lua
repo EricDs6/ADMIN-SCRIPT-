@@ -3,6 +3,46 @@
 
 print("🚀 Carregando Admin Script Modular v2.0...")
 
+-- Inicializar AdminScript para evitar erros de referência nil
+if not _G.AdminScript then
+    _G.AdminScript = {
+        -- Informações da versão
+        version = "2.0",
+        lastUpdate = "2025-09-21",
+        
+        -- Serviços
+        Services = {
+            Players = game:GetService("Players"),
+            UserInputService = game:GetService("UserInputService"),
+            RunService = game:GetService("RunService"),
+            TweenService = game:GetService("TweenService")
+        },
+        
+        -- Player info
+        Player = game:GetService("Players").LocalPlayer,
+        
+        -- Estado global
+        Connections = {},
+        OriginalValues = {},
+        
+        -- Módulos carregados
+        LoadedModules = {},
+        
+        -- Estruturas de módulos
+        Movement = {},
+        GUI = {},
+        Commands = {},
+        Teleport = {},
+        Tools = {},
+        Character = {},
+        Server = {},
+        Game = {},
+        
+        -- Configuração
+        Config = {}
+    }
+end
+
 -- Função para detectar loadstring disponível
 local function getLoadstring()
     return loadstring or 
@@ -176,12 +216,27 @@ local function loadConfig()
     }
 end
 
+-- Garantir que a estrutura de Admin.Movement exista
+Admin.Movement = Admin.Movement or {}
+
 -- Função para carregar um módulo específico
 local function loadModule(modulePath, moduleName)
     local baseURL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/"
     local url = baseURL .. modulePath
     
     print("📦 Carregando módulo: " .. moduleName)
+    
+    -- Preparar a estrutura necessária antes de carregar o módulo
+    local parts = splitString(moduleName, ".")
+    if #parts == 2 then
+        local category = parts[1]
+        local modName = parts[2]
+        
+        -- Criar categoria se não existir
+        if not Admin[category] then
+            Admin[category] = {}
+        end
+    end
     
     -- Obter loadstring compatível
     local compile = getLoadstring()
@@ -197,8 +252,34 @@ local function loadModule(modulePath, moduleName)
         return false
     end
     
+    -- Adicionar proteção no início do código
+    local protectedCode = [[
+    -- Proteção contra erros de referência nil
+    if not _G.AdminScript then
+        _G.AdminScript = {
+            Movement = {},
+            GUI = {},
+            Services = {
+                Players = game:GetService("Players"),
+                UserInputService = game:GetService("UserInputService"),
+                RunService = game:GetService("RunService"),
+                TweenService = game:GetService("TweenService")
+            },
+            Player = game:GetService("Players").LocalPlayer,
+            Connections = {},
+            OriginalValues = {}
+        }
+    end
+    
+    if not _G.AdminScript.Movement then _G.AdminScript.Movement = {} end
+    if not _G.AdminScript.GUI then _G.AdminScript.GUI = {} end
+    if not _G.AdminScript.Connections then _G.AdminScript.Connections = {} end
+    if not _G.AdminScript.OriginalValues then _G.AdminScript.OriginalValues = {} end
+    
+    ]] .. result
+    
     -- Compilar e executar
-    local success, moduleFunction = pcall(compile, result)
+    local success, moduleFunction = pcall(compile, protectedCode)
     if success and moduleFunction then
         local execSuccess, execError = pcall(moduleFunction)
         if execSuccess then
@@ -229,12 +310,33 @@ local function splitString(str, delimiter)
     return result
 end
 
+-- Inicializar categorias antes de carregar módulos
+local function initializeCategories()
+    print("🏗️ Inicializando estrutura de categorias...")
+    
+    -- Categorias principais
+    Admin.Movement = Admin.Movement or {}
+    Admin.GUI = Admin.GUI or {}
+    Admin.Commands = Admin.Commands or {}
+    Admin.Teleport = Admin.Teleport or {}
+    Admin.Tools = Admin.Tools or {}
+    Admin.Character = Admin.Character or {}
+    Admin.Server = Admin.Server or {}
+    Admin.Game = Admin.Game or {}
+    
+    -- Logs
+    print("✅ Estrutura de categorias inicializada")
+end
+
 -- Função para carregar módulos baseado na configuração
 local function loadModules(config)
     if not config or not config.loadOrder then
         warn("❌ Configuração inválida!")
         return
     end
+    
+    -- Inicializar categorias primeiro
+    initializeCategories()
     
     print("🔄 Carregando módulos conforme configuração...")
     
@@ -243,6 +345,12 @@ local function loadModules(config)
         if #parts == 2 then
             local category = parts[1]
             local moduleName = parts[2]
+            
+            -- Garantir que a categoria exista
+            if not Admin[category] then
+                Admin[category] = {}
+                print("📁 Criando categoria: " .. category)
+            end
             
             local categoryConfig = config[category]
             if categoryConfig and categoryConfig.enabled and categoryConfig.modules then
@@ -413,6 +521,57 @@ else
         end
     end
 end
+
+-- Verificar se todos os módulos foram carregados corretamente
+local function verificarModulos()
+    print("🔍 Verificando módulos carregados...")
+    
+    -- Verificar categorias principais
+    if not Admin.Movement then 
+        print("⚠️ Categoria Movement não inicializada! Criando...")
+        Admin.Movement = {}
+    end
+    
+    if not Admin.GUI then
+        print("⚠️ Categoria GUI não inicializada! Criando...")
+        Admin.GUI = {}
+    end
+    
+    -- Exportar módulos para _G para acesso global
+    _G.AdminScript = Admin
+    
+    -- Verificar módulos específicos que costumam dar problemas
+    if Admin.LoadedModules["movement.noclip"] and not Admin.Movement.noclip then
+        print("🔄 Corrigindo referência: movement.noclip")
+        -- Tentar reatribuir do módulo
+        if NoclipModule then
+            Admin.Movement.noclip = NoclipModule
+        else
+            Admin.Movement.noclip = {
+                enabled = false,
+                toggle = function() print("⚠️ Função noclip reconstruída") end
+            }
+        end
+    end
+    
+    if Admin.LoadedModules["movement.fly"] and not Admin.Movement.fly then
+        print("🔄 Corrigindo referência: movement.fly")
+        -- Tentar reatribuir do módulo
+        if FlyModule then
+            Admin.Movement.fly = FlyModule
+        else
+            Admin.Movement.fly = {
+                enabled = false,
+                toggle = function() print("⚠️ Função fly reconstruída") end
+            }
+        end
+    end
+    
+    print("✅ Verificação de módulos concluída")
+end
+
+-- Chamar verificação de módulos
+verificarModulos()
 
 print("✅ Admin Script v" .. Admin.version .. " carregado completamente!")
 print("🎮 Use a GUI ou comandos de chat para controlar")

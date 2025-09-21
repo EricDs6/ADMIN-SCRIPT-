@@ -26,9 +26,17 @@ local FlyModule = {
     useNoclip = false -- Opção para ativar noclip durante o voo
 }
 
+-- Adicionar ao Admin.Movement para acesso global
+Admin.Movement = Admin.Movement or {}
+Admin.Movement.fly = FlyModule
+
 -- Função para encontrar o veículo (assento ou modelo pai)
 local function findVehicle()
-    if Admin.Humanoid.SeatPart and (Admin.Humanoid.SeatPart:IsA("Seat") or Admin.Humanoid.SeatPart:IsA("VehicleSeat")) then
+    -- Garantir que Humanoid esteja acessível
+    Admin.Character = Player.Character
+    Admin.Humanoid = Admin.Character and Admin.Character:FindFirstChildOfClass("Humanoid")
+    
+    if Admin.Humanoid and Admin.Humanoid.SeatPart and (Admin.Humanoid.SeatPart:IsA("Seat") or Admin.Humanoid.SeatPart:IsA("VehicleSeat")) then
         local seat = Admin.Humanoid.SeatPart
         -- Tentar encontrar o modelo pai do assento (ex.: carro completo)
         local model = seat:FindFirstAncestorOfClass("Model") or seat
@@ -261,6 +269,13 @@ Admin.Movement.Fly = {
     isEnabled = isFlying,
     flyEnabled = function() return FlyModule.enabled end
 }
+
+-- Atualizar referência na categoria Movement para garantir acesso correto
+Admin.Movement = Admin.Movement or {}
+Admin.Movement.fly = FlyModule
+
+-- Retornar o módulo para ser acessível via loadstring
+return FlyModule
 
 -- Registrar no sistema de conexões para limpeza
 Admin.Connections.FlyModule = FlyModule

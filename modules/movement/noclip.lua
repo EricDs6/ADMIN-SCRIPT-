@@ -20,8 +20,14 @@ local NoclipModule = {
     connection = nil
 }
 
+-- Adicionar ao Admin.Movement para acesso global
+Admin.Movement = Admin.Movement or {}
+Admin.Movement.noclip = NoclipModule
+
 -- Função para ativar noclip
 local function enableNoclip()
+    -- Garantir que o personagem esteja acessível
+    Admin.Character = Player.Character
     local character = Admin.Character
     if not character then
         warn("❌ Personagem não encontrado!")
@@ -135,6 +141,13 @@ Admin.Movement.Noclip = {
 
 -- Registrar no sistema de conexões para limpeza
 Admin.Connections.NoclipModule = NoclipModule
+
+-- Atualizar referência na categoria Movement para garantir acesso correto
+Admin.Movement = Admin.Movement or {}
+Admin.Movement.noclip = NoclipModule
+
+-- Retornar o módulo para ser acessível via loadstring
+return NoclipModule
 
 print("✅ Módulo de noclip carregado!")
 print("💡 Use Admin.Movement.Noclip.toggle() para ativar/desativar")

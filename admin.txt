@@ -1,0 +1,51 @@
+# Admin Script Modular - Correções e Melhorias
+
+## Correções Implementadas
+
+1. **Correção de Erros "attempt to index nil"**:
+   - Agora a estrutura do objeto `Admin` é inicializada completamente antes de carregar módulos
+   - Adicionadas verificações de nulos em pontos críticos
+   - Proteção de código adicionada nos módulos para inicializar estruturas necessárias
+
+2. **Melhorias na Estrutura de Carregamento**:
+   - Adicionada função `initializeCategories()` que garante que todas as categorias existam antes do carregamento
+   - Cada módulo agora atualiza sua referência no objeto Admin correspondente
+   - Criada camada de proteção com verificação de módulos carregados ao final
+
+3. **Exportação Adequada de Módulos**:
+   - Módulos agora retornam suas funcionalidades no final do arquivo
+   - Referencias como `Admin.Movement.fly` e `Admin.Movement.noclip` agora são configuradas corretamente
+   - Múltiplas atualizações de referências para garantir disponibilidade dos módulos
+
+## Como Usar
+
+O script mantém a mesma estrutura de uso:
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
+```
+
+### Comandos Principais
+
+- Para ativar/desativar voo: `Admin.Movement.fly.toggle()`
+- Para ativar/desativar noclip: `Admin.Movement.noclip.toggle()`
+- Para ajustar velocidade de voo: `Admin.Movement.fly.setSpeed(100)`
+
+## Depurando Erros
+
+Caso ainda ocorram erros, observe o console para mensagens detalhadas. O script agora inclui verificações em múltiplos pontos que exibirão mensagens específicas sobre qualquer problema.
+
+## Estrutura Modular
+
+A estrutura foi mantida conforme solicitado, com cada função em seu próprio arquivo:
+- `init.lua` - Carregador principal
+- `modules/movement/fly.lua` - Função de voo
+- `modules/movement/noclip.lua` - Função para atravessar paredes
+- `modules/gui/main.lua` - Interface gráfica
+
+## Proteções Implementadas
+
+1. Inicialização automática de objetos importantes no início do script
+2. Verificação do personagem do jogador antes de acessar suas propriedades
+3. Múltiplas camadas de proteção contra erros nil
+4. Sistema de fallback para módulos críticos
