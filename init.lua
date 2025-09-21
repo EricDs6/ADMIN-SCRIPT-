@@ -68,6 +68,7 @@ local Services = Admin.Services
 local Player = Admin.Player
 
 -- Helpers
+local BASE_URL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/"
 local function splitString(str, delimiter)
     if not str or not delimiter then return {} end
     local result = {}
@@ -139,10 +140,22 @@ local function httpGet(url)
     return nil
 end
 
+-- Carregar configuração remota (config.lua)
+local function loadRemoteConfig()
+    local compile = getLoadstring()
+    if type(compile) ~= "function" then return nil end
+    local code = httpGet(BASE_URL .. "config.lua")
+    if type(code) ~= "string" or #code == 0 then return nil end
+    local okCompile, fnOrErr = pcall(compile, code)
+    if not okCompile or type(fnOrErr) ~= "function" then return nil end
+    local okRun, cfg = pcall(fnOrErr)
+    if not okRun or type(cfg) ~= "table" then return nil end
+    return cfg
+end
+
 -- Loader de módulos remotos
 local function loadModule(modulePath, moduleKey)
-    local baseURL = "https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/"
-    local url = baseURL .. modulePath
+    local url = BASE_URL .. modulePath
     if Admin.Config.debugMode then print("[INIT] 📦 Carregando módulo:", moduleKey) end
 
     local compile = getLoadstring()
@@ -220,6 +233,40 @@ local moduleConfig = {
     }
 }
 
+-- Aplicar configuração remota (mesclar com defaults)
+do
+    local function applyRemote(cfg)
+        -- settings -> Admin.Config
+        if type(cfg.settings) == "table" then
+            for k, v in pairs(cfg.settings) do Admin.Config[k] = v end
+        end
+        -- loadOrder -> substitui se válido
+        if type(cfg.loadOrder) == "table" then moduleConfig.loadOrder = cfg.loadOrder end
+        -- categorias principais
+        for _, cat in ipairs({"Movement","Character","Teleport","GUI"}) do
+            if type(cfg[cat]) == "table" then
+                if type(cfg[cat].enabled) == "boolean" then
+                    moduleConfig[cat].enabled = cfg[cat].enabled
+                end
+                if type(cfg[cat].modules) == "table" then
+                    moduleConfig[cat].modules = moduleConfig[cat].modules or {}
+                    for name, mod in pairs(cfg[cat].modules) do
+                        moduleConfig[cat].modules[name] = mod
+                    end
+                end
+            end
+        end
+    end
+
+    local remoteCfg = loadRemoteConfig()
+    if remoteCfg then
+        applyRemote(remoteCfg)
+        if Admin.Config.debugMode then print("[INIT] ⚙️ Config remota aplicada") end
+    else
+        if Admin.Config.debugMode then print("[INIT] ⚠️ Usando config padrão (sem config remota)") end
+    end
+end
+
 local function loadAllModules()
     print("[INIT] 🔄 Carregando módulos...")
     Admin.Movement = Admin.Movement or {}
@@ -296,6 +343,16 @@ local function setupChatCommands()
             if not toggled and Admin.Character and Admin.Character.godmode and Admin.Character.godmode.toggle then
                 Admin.Character.godmode.toggle()
             end
+        elseif msg == "/selftest" then
+            print("[TEST] Iniciando autoteste...")
+            local function ok(b) return b and "OK" or "NOK" end
+            print("[TEST] PlayerGui:", ok(Player and Player:FindFirstChildOfClass("PlayerGui")))
+            print("[TEST] GUI.main:", ok(Admin.GUI and Admin.GUI.main))
+            print("[TEST] Movement.fly:", ok(Admin.Movement and Admin.Movement.fly and type(Admin.Movement.fly.toggle)=="function"))
+            print("[TEST] Movement.noclip:", ok(Admin.Movement and Admin.Movement.noclip and type(Admin.Movement.noclip.toggle)=="function"))
+            print("[TEST] Movement.speed:", ok(Admin.Movement and Admin.Movement.speed and type(Admin.Movement.speed.set)=="function"))
+            print("[TEST] Character.godmode:", ok((Admin.Character and Admin.Character.godmode) or (Admin.CharacterMods and Admin.CharacterMods.godmode)))
+            print("[TEST] Fim do autoteste.")
         end
     end)
     Admin.Connections.ChatCommands = conn

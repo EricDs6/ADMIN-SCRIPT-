@@ -1,40 +1,77 @@
-# Admin Script Modular v2.0# Admin Script Modular v2.0# Admin Script (Modular, carregado por loadstring)
+# Admin Script Modular v2.0# Admin Script Modular v2.0# Admin Script Modular v2.0# Admin Script (Modular, carregado por loadstring)
 
 
 
-## Descrição
-
-Este script Admin para Roblox usa uma arquitetura modular que separa cada funcionalidade em arquivos individuais para maior facilidade de manutenção e personalização. Esta abordagem modular permite que você ative apenas as funcionalidades que deseja usar.
-
-## 🏗️ Nova Arquitetura ModularEste repositório contém o script admin modularizado para Roblox, com um módulo principal em `src/admin_core.lua` e um loader simples em `init.lua` que baixa o módulo remoto e executa com `loadstring`.
-
-## Como Usar
+## Loadstring
 
 
 
-### Instalação Básica
-
-```luaEste projeto foi completamente reestruturado para máxima manutenibilidade e flexibilidade. Cada funcionalidade agora é um módulo independente.## Uso rápido (no executor)
+```## Descrição
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
 
+```Este script Admin para Roblox usa uma arquitetura modular que separa cada funcionalidade em arquivos individuais para maior facilidade de manutenção e personalização. Esta abordagem modular permite que você ative apenas as funcionalidades que deseja usar.
+
+
+
+## Overrides de Configuração (opcional)## 🏗️ Nova Arquitetura ModularEste repositório contém o script admin modularizado para Roblox, com um módulo principal em `src/admin_core.lua` e um loader simples em `init.lua` que baixa o módulo remoto e executa com `loadstring`.
+
+
+
+Antes do `loadstring`, você pode definir overrides rápidos:## Como Usar
+
+
+
 ```
 
+_G.AdminScriptUserConfig = {
 
+  autoLoadGUI = false,      -- não abrir GUI automaticamente### Instalação Básica
 
-### Comandos de Chat## 📁 Estrutura do ProjetoCopie e cole no seu executor de scripts Roblox:
+  debugMode = true,         -- logs detalhados
 
-- `/admin` - Abre/fecha a GUI
+  diagnosticsCoreGui = true,-- monitorar CoreGui (modo diagnóstico)```luaEste projeto foi completamente reestruturado para máxima manutenibilidade e flexibilidade. Cada funcionalidade agora é um módulo independente.## Uso rápido (no executor)
+
+  diagnosticsVerbosity = 2  -- nível de detalhe do diagnóstico
+
+}loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-/main/init.lua"))()
+
+```
+
+```
+
+## Comandos de Chat
+
+- `/admin` — abre/fecha a GUI
+
+- `/fly` — ativa/desativa voo
+
+- `/noclip` — ativa/desativa noclip### Comandos de Chat## 📁 Estrutura do ProjetoCopie e cole no seu executor de scripts Roblox:
+
+- `/god` ou `/godmode` — ativa/desativa godmode (Character ou CharacterMods)
+
+- `/cleanup` | `/limpar` | `/clear` — limpa tudo- `/admin` - Abre/fecha a GUI
+
+- `/selftest` — roda um autoteste rápido do estado
 
 - `/cleanup` - Remove todas as alterações feitas pelo script
 
-- `/fly` - Ativa/desativa modo de voo
+## Estrutura
 
-- `/noclip` - Ativa/desativa atravessar paredes``````
+- `init.lua` — loader principal, baixa módulos do repositório e inicializa- `/fly` - Ativa/desativa modo de voo
 
-- `/god` - Ativa/desativa modo invencível
+- `config.lua` — mapeamento remoto de módulos e settings
 
-admPRISON/loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/init.lua"))()
+- `modules/` — módulos por categoria- `/noclip` - Ativa/desativa atravessar paredes``````
+
+
+
+## Notas- `/god` - Ativa/desativa modo invencível
+
+- A GUI agora é parentada somente no PlayerGui (com timeout) para evitar erros em CoreGui.
+
+- Em executores com sobreposições (overlays) que injetam scripts no CoreGui, ative `diagnosticsCoreGui` para identificar o criador.admPRISON/loadstring(game:HttpGet("https://raw.githubusercontent.com/EricDs6/ADMIN-SCRIPT-RBX/main/init.lua"))()
+
 
 ## Módulos Disponíveis
 
