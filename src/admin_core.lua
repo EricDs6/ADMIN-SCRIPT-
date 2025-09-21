@@ -80,8 +80,8 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 -- Sombra do painel com gradiente (atualizada para acompanhar a estrutura unificada)
 local shadow = Instance.new("Frame")
-shadow.Size = UDim2.new(0, 280, 0, 560)
-shadow.Position = UDim2.new(0, 10, 0.5, -280) -- Canto esquerdo da tela
+shadow.Size = UDim2.new(0, 320, 0, 600)
+shadow.Position = UDim2.new(0, 10, 0.5, -300) -- Canto esquerdo da tela
 shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
 shadow.BackgroundTransparency = 0.7
 shadow.BorderSizePixel = 0
@@ -106,8 +106,8 @@ shadowCorner.Parent = shadow
 
 -- GUI Principal Unificada
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 280, 0, 560)
-mainFrame.Position = UDim2.new(0, 10, 0.5, -280) -- Canto esquerdo da tela
+mainFrame.Size = UDim2.new(0, 320, 0, 600)
+mainFrame.Position = UDim2.new(0, 10, 0.5, -300) -- Canto esquerdo da tela
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 25)
 mainFrame.BackgroundTransparency = 0.05
 mainFrame.BorderSizePixel = 0
@@ -174,7 +174,7 @@ title.BackgroundTransparency = 1
 title.Text = "FITA-K7-ADMIN"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18
+title.TextSize = 20
 title.TextXAlignment = Enum.TextXAlignment.Center
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.RichText = true
@@ -195,6 +195,29 @@ contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 110, 130)
 contentFrame.ZIndex = 2 -- Mesmo nível do mainFrame, mas abaixo do header
 contentFrame.Parent = mainFrame
 contentFrame.Active = true
+-- Padding interno para o conteúdo
+local contentPadding = Instance.new("UIPadding")
+contentPadding.PaddingTop = UDim.new(0, 10)
+contentPadding.PaddingBottom = UDim.new(0, 10)
+contentPadding.PaddingLeft = UDim.new(0, 10)
+contentPadding.PaddingRight = UDim.new(0, 10)
+contentPadding.Parent = contentFrame
+
+-- Campo de busca
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(1, -20, 0, 30)
+searchBox.Position = UDim2.new(0, 10, 0, 10)
+searchBox.PlaceholderText = "Buscar funcionalidades..."
+searchBox.Text = ""
+searchBox.ClearTextOnFocus = false
+searchBox.TextColor3 = Color3.fromRGB(230,230,230)
+searchBox.PlaceholderColor3 = Color3.fromRGB(150,160,180)
+searchBox.BackgroundColor3 = Color3.fromRGB(30,34,48)
+searchBox.BorderSizePixel = 0
+searchBox.ZIndex = 4
+searchBox.Parent = contentFrame
+local searchCorner = Instance.new("UICorner"); searchCorner.CornerRadius = UDim.new(0,8); searchCorner.Parent = searchBox
+local searchStroke = Instance.new("UIStroke"); searchStroke.Color = Color3.fromRGB(70,80,110); searchStroke.Thickness = 1; searchStroke.Transparency = 0.3; searchStroke.Parent = searchBox
 -- Botão de arrastar (drag button) dentro do header
 local dragButton = Instance.new("TextButton")
 dragButton.Size = UDim2.new(0, 32, 0, 32)
@@ -322,10 +345,13 @@ minimizeButton.MouseLeave:Connect(function()
     minimizeStroke.Transparency = 0.6
     minimizeButton:TweenSize(UDim2.new(0, 32, 0, 32), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
 end)
+-- Lista global de botões para possível filtro por busca
+local allButtons = {}
+
 local function createButton(text, position, color, parent)
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 210, 0, 36)
-button.Position = position
+button.Size = UDim2.new(1, -40, 0, 36)
+button.Position = position or UDim2.new(0, 20, 0, 0)
 button.BackgroundColor3 = color or Color3.fromRGB(50, 54, 70)
 button.Text = text
 button.TextColor3 = Color3.fromRGB(230, 230, 230)
@@ -337,10 +363,24 @@ button.ZIndex = 4
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 10)
 buttonCorner.Parent = button
+-- Stroke
+local btnStroke = Instance.new("UIStroke")
+btnStroke.Color = Color3.fromRGB(80, 90, 120)
+btnStroke.Transparency = 0.4
+btnStroke.Thickness = 1
+btnStroke.Parent = button
+-- Gradiente
+local btnGrad = Instance.new("UIGradient")
+btnGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60,64,84)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(45,50,68))
+}
+btnGrad.Rotation = 90
+btnGrad.Parent = button
 -- Hover efeito
 button.MouseEnter:Connect(function()
 if not button.Text:find("ON") then
-button.BackgroundColor3 = Color3.fromRGB(60, 64, 90)
+button.BackgroundColor3 = Color3.fromRGB(65, 70, 95)
 end
 end)
 button.MouseLeave:Connect(function()
@@ -348,18 +388,31 @@ if not button.Text:find("ON") then
 button.BackgroundColor3 = color or Color3.fromRGB(50, 54, 70)
 end
 end)
+-- Feedback de clique
+button.MouseButton1Down:Connect(function()
+    button:TweenSize(UDim2.new(1, -44, 0, 34), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.08, true)
+end)
+button.MouseButton1Up:Connect(function()
+    button:TweenSize(UDim2.new(1, -40, 0, 36), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.08, true)
+end)
+table.insert(allButtons, button)
 return button
 end
 local function createLabel(text, position, parent)
 local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, -20, 0, 28)
+label.Size = UDim2.new(1, -20, 0, 30)
 label.Position = position
-label.BackgroundColor3 = Color3.fromRGB(40, 44, 60)
+label.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
 label.BackgroundTransparency = 0.15
-label.Text = "  " .. text .. ""
-label.TextColor3 = Color3.fromRGB(255, 200, 80)
+-- Ícones por seção
+local icons = {
+    ["Movimento"] = "🚀 ", ["Combate"] = "⚔️ ", ["Teleporte"] = "🧭 ", ["Utilidades"] = "🧰 ",
+    ["Troll"] = "🎭 ", ["Admin"] = "🛠️ ", ["Mundo"] = "🌍 ", ["Diversão"] = "🎉 ", ["Sistema"] = "⚙️ "
+}
+label.Text = "  " .. (icons[text] or "") .. text .. ""
+label.TextColor3 = Color3.fromRGB(255, 210, 100)
 label.Font = Enum.Font.GothamBold
-label.TextSize = 15
+label.TextSize = 16
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.RichText = true
 label.Parent = parent or contentFrame
@@ -367,8 +420,28 @@ label.ZIndex = 4
 local labelCorner = Instance.new("UICorner")
 labelCorner.CornerRadius = UDim.new(0, 8)
 labelCorner.Parent = label
+local labelStroke = Instance.new("UIStroke")
+labelStroke.Color = Color3.fromRGB(90, 100, 130)
+labelStroke.Transparency = 0.3
+labelStroke.Thickness = 1
+labelStroke.Parent = label
 return label
 end
+
+-- Filtro de busca: esconde/mostra botões por texto
+local function applySearchFilter(query)
+    query = string.lower(query or "")
+    for _, btn in ipairs(allButtons) do
+        if btn and btn.Parent then
+            local visible = (query == "") or string.find(string.lower(btn.Text), query, 1, true) ~= nil
+            btn.Visible = visible
+        end
+    end
+end
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    applySearchFilter(searchBox.Text)
+end)
 local function createValueControl(labelText, initialValue, minValue, maxValue, stepValue, position, parent)
     -- Container para o controle de valor
     local container = Instance.new("Frame")
@@ -380,9 +453,9 @@ local function createValueControl(labelText, initialValue, minValue, maxValue, s
 
     -- Label do valor
     local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 120, 1, 0)
+    valueLabel.Size = UDim2.new(0, 140, 1, 0)
     valueLabel.Position = UDim2.new(0, 0, 0, 0)
-    valueLabel.BackgroundColor3 = Color3.fromRGB(40, 44, 60)
+    valueLabel.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
     valueLabel.BackgroundTransparency = 0.15
     valueLabel.Text = "  " .. labelText .. ": " .. initialValue .. ""
     valueLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
@@ -399,7 +472,7 @@ local function createValueControl(labelText, initialValue, minValue, maxValue, s
     -- Botão -
     local minusButton = Instance.new("TextButton")
     minusButton.Size = UDim2.new(0, 30, 0, 30)
-    minusButton.Position = UDim2.new(0, 130, 0.5, -15)
+    minusButton.Position = UDim2.new(0, 150, 0.5, -15)
     minusButton.BackgroundColor3 = Color3.fromRGB(80, 40, 40)
     minusButton.Text = "−"
     minusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -429,7 +502,7 @@ local function createValueControl(labelText, initialValue, minValue, maxValue, s
     -- Botão +
     local plusButton = Instance.new("TextButton")
     plusButton.Size = UDim2.new(0, 30, 0, 30)
-    plusButton.Position = UDim2.new(0, 170, 0.5, -15)
+    plusButton.Position = UDim2.new(0, 190, 0.5, -15)
     plusButton.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
     plusButton.Text = "+"
     plusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -472,7 +545,19 @@ local function createValueControl(labelText, initialValue, minValue, maxValue, s
     }
 end
 -- Inicializar variável de posicionamento Y
-local yOffset = 45
+local yOffset = 50
+-- Dica abaixo da busca
+local searchNote = Instance.new("TextLabel")
+searchNote.Size = UDim2.new(1, -20, 0, 18)
+searchNote.Position = UDim2.new(0, 10, 0, 45)
+searchNote.BackgroundTransparency = 1
+searchNote.Text = "Dica: pesquise por 'TP', 'Pulo', 'Luz', etc."
+searchNote.TextColor3 = Color3.fromRGB(150,160,185)
+searchNote.TextSize = 12
+searchNote.Font = Enum.Font.Gotham
+searchNote.TextXAlignment = Enum.TextXAlignment.Left
+searchNote.Parent = contentFrame
+yOffset = yOffset + 20
 -- Seção Movimento
 local movimentoLabel = createLabel("Movimento", UDim2.new(0, 10, 0, yOffset))
 yOffset = yOffset + 35
