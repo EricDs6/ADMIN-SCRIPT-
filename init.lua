@@ -92,6 +92,17 @@ Player.CharacterAdded:Connect(function()
     end
 end)
 
+-- Overrides de configuração via global (para diagnóstico e ajustes rápidos)
+do
+    local function mergeConfig(src)
+        if type(src) ~= "table" then return end
+        for k, v in pairs(src) do Admin.Config[k] = v end
+        if Admin.Config.debugMode then print("[INIT] ⚙️ Config override aplicado:", game:GetService("HttpService"):JSONEncode(src)) end
+    end
+    if type(_G.AdminScriptUserConfig) == "table" then mergeConfig(_G.AdminScriptUserConfig) end
+    if type(_G.AdminScriptConfig) == "table" then mergeConfig(_G.AdminScriptConfig) end
+end
+
 -- Exec compatibilidade
 local function getLoadstring()
     return loadstring
