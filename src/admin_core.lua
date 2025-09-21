@@ -431,6 +431,20 @@ labelStroke.Parent = label
 return label
 end
 
+-- Atualiza estado visual de botões (definido cedo para uso nos módulos de seção)
+local function updateButtonState(button, enabled, feature)
+    if not button then return end
+    if enabled then
+        button.Text = feature .. ": ON"
+        button.BackgroundColor3 = Color3.fromRGB(60, 180, 90)
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+    else
+        button.Text = feature .. ": OFF"
+        button.BackgroundColor3 = Color3.fromRGB(50, 54, 70)
+        button.TextColor3 = Color3.fromRGB(230,230,230)
+    end
+end
+
 -- Filtro de busca: esconde/mostra botões por texto
 local function applySearchFilter(query)
     query = string.lower(query or "")
@@ -641,116 +655,163 @@ do
         warn("Não foi possível carregar a seção Movimento. Código: " .. tostring(movement))
     end
 end
--- Seção Combate
-local combateLabel = createLabel("Combate", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local godButton = createButton("Modo Deus: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local autoFireButton = createButton("Auto-Fire: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local noRecoilButton = createButton("Sem Recuo: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Teleporte
-local teleporteLabel = createLabel("Teleporte", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local clickTpButton = createButton("TP ao Clicar: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local tpRandomButton = createButton("TP Jogador Aleatório", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local tpSpawnButton = createButton("TP para Spawn", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local followPlayerButton = createButton("Seguir Jogador: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Utilidades
-local utilidadesLabel = createLabel("Utilidades", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local invisibleButton = createButton("Invisível: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local lowGravityButton = createButton("Gravidade Baixa: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local autoHealButton = createButton("Cura Automática: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local antiFallButton = createButton("Anti-Queda: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local noFallDamageButton = createButton("Sem Dano de Queda: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local anchorButton = createButton("Grudar no Chão: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local carryPartsButton = createButton("Carregar Partes: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local markPartsButton = createButton("Marcar Partes: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local antiAfkButton = createButton("Anti-AFK: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local fullBrightButton = createButton("Brilho Total: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local xrayButton = createButton("Raio-X: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Troll
-local trollLabel = createLabel("Troll", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local trollButton = createButton("Modo Troll: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local flingButton = createButton("Arremessar Jogadores", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local spinButton = createButton("Girar: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local rainbowButton = createButton("Arco-Íris: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local freezeAllButton = createButton("Congelar Todos: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Admin
-local adminLabel = createLabel("Admin", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local btoolsButton = createButton("Dar Btools", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local wallClimbButton = createButton("Escalar Parede: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local swimInAirButton = createButton("Nadar no Ar: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Mundo
-local worldLabel = createLabel("Mundo", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local removeFogButton = createButton("Remover Névoa", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local forceDayButton = createButton("Forçar Dia", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local forceNightButton = createButton("Forçar Noite", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local removeRoofButton = createButton("Remover Teto", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local removeWallsButton = createButton("Remover Paredes", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Diversão
-local funLabel = createLabel("Diversão", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local flashlightButton = createButton("Lanterna: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local reachButton = createButton("Alcance: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 45
-local bigHeadButton = createButton("Cabeça Grande: OFF", UDim2.new(0, 20, 0, yOffset), nil)
-yOffset = yOffset + 55
--- Seção Sistema
-local sistemaLabel = createLabel("Sistema", UDim2.new(0, 10, 0, yOffset))
-yOffset = yOffset + 35
-local resetButton = createButton("Reiniciar Todas as Funcionalidades", UDim2.new(0, 20, 0, yOffset), Color3.fromRGB(150, 50, 50))
-yOffset = yOffset + 45
-local exitButton = createButton("🚪 Encerrar Script", UDim2.new(0, 20, 0, yOffset), Color3.fromRGB(150, 50, 50))
-yOffset = yOffset + 45
+-- Seção Combate (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, UserInputService = UserInputService, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("combat")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.combat = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Combate. Código: " .. tostring(mod))
+    end
+end
+-- Seção Teleporte (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, UserInputService = UserInputService, workspace = workspace, Players = Players },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("teleport")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.teleport = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Teleporte. Código: " .. tostring(mod))
+    end
+end
+-- Seção Utilidades (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, UserInputService = UserInputService, workspace = workspace, Lighting = Lighting, Players = Players, TweenService = TweenService },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("utilities")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.utilities = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Utilidades. Código: " .. tostring(mod))
+    end
+end
+-- Seção Troll (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, Players = Players, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("troll")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.troll = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Troll. Código: " .. tostring(mod))
+    end
+end
+-- Seção Admin (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, UserInputService = UserInputService, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("admin")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.admin = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Admin. Código: " .. tostring(mod))
+    end
+end
+-- Seção Mundo (modular)
+do
+    local ctx = {
+        services = { Lighting = Lighting, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("world")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.world = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Mundo. Código: " .. tostring(mod))
+    end
+end
+-- Seção Diversão (modular)
+do
+    local ctx = {
+        services = { RunService = RunService, workspace = workspace },
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+    }
+    local ok, mod = loadSection("fun")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.fun = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Diversão. Código: " .. tostring(mod))
+    end
+end
+-- Seção Sistema será montada após as funções de sistema estarem disponíveis
 -- Atualizar canvas size
 contentFrame.CanvasSize = UDim2.new(0, 0, 0, yOffset + 80)
--- Funções principais (definidas antes das conexões)
-local function updateButtonState(button, enabled, feature)
-if enabled then
-button.Text = feature .. ": ON"
-button.BackgroundColor3 = Color3.fromRGB(60, 180, 90)
-button.TextColor3 = Color3.fromRGB(255,255,255)
-else
-button.Text = feature .. ": OFF"
-button.BackgroundColor3 = Color3.fromRGB(50, 54, 70)
-button.TextColor3 = Color3.fromRGB(230,230,230)
-end
-end
 -- Labels de movimento são gerenciados no módulo da seção
 -- Variáveis para transportar partes soltas
 local carriedParts = {}
@@ -1898,242 +1959,79 @@ end
 print("✅ Script encerrado com sucesso! Todas as funcionalidades foram desativadas.")
 end
 resetAllFeatures = function()
-local function off(fn, cond)
-if cond then pcall(fn) end
-end
-off(toggleFly, flyEnabled)
-off(toggleNoclip, noclipEnabled)
-off(toggleGod, godEnabled)
-off(toggleClickTp, clickTpEnabled)
-off(toggleSpeedHack, speedHackEnabled)
-off(toggleJumpHack, jumpHackEnabled)
-off(toggleInfiniteJump, infiniteJumpEnabled)
--- As três acima agora pertencem ao módulo de Movimento; reset via API quando disponível
-off(toggleInvisible, invisibleEnabled)
-off(toggleFullBright, fullBrightEnabled)
-off(toggleRainbow, rainbowEnabled)
-off(toggleLowGravity, lowGravityEnabled)
-off(toggleAutoHeal, autoHealEnabled)
-off(toggleAntiFall, antiFallEnabled)
-off(toggleAnchor, anchorEnabled)
-off(toggleCarryParts, carryPartsEnabled)
-off(toggleMarkParts, markPartsEnabled)
-off(toggleAntiAfk, antiAfkEnabled)
-off(toggleXray, xrayEnabled)
-off(toggleSpin, spinEnabled)
-off(toggleWallClimb, wallClimbEnabled)
-off(toggleSwimInAir, swimEnabled)
-off(toggleReach, reachEnabled)
-off(toggleNoFallDamage, noFallDamageEnabled)
-off(toggleFollowPlayer, followEnabledFlag)
-off(toggleTroll, trollEnabled)
-off(toggleFreezeAll, freezeAllEnabled)
-off(toggleAutoFire, autoFireEnabled)
-off(toggleNoRecoil, noRecoilEnabled)
-off(toggleBigHead, bigHeadOn)
-if bodyVelocity.Parent then bodyVelocity.Parent = nil end
-if bodyGyro.Parent then bodyGyro.Parent = nil end
--- Movers pertencem à seção de Movimento
--- Interromper efeito de cor pulsante
-if colorTweenConnection then
-    pcall(function() colorTweenConnection:Disconnect() end)
-    colorTweenConnection = nil
-end
-if humanoid then
-humanoid.PlatformStand = false
-if humanoidRootPart then humanoidRootPart.Anchored = false end
-end
-for _, v in pairs(connections) do
-if typeof(v) == "RBXScriptConnection" then
-pcall(function() v:Disconnect() end)
-elseif type(v) == "table" then
-for _, obj in pairs(v) do
-if typeof(obj) == "RBXScriptConnection" then
-pcall(function() obj:Disconnect() end)
-elseif obj and obj.Destroy then
-pcall(function() obj:Destroy() end)
-end
-end
-elseif v and v.Destroy then
-pcall(function() v:Destroy() end)
-end
-end
-connections = {}
-originalValues = {}
--- Delegar resets das seções
-if sectionApis and sectionApis.movement and sectionApis.movement.reset then
-    pcall(sectionApis.movement.reset)
-end
+    -- Delegar resets das seções primeiro
+    if sectionApis and sectionApis.movement and sectionApis.movement.reset then pcall(sectionApis.movement.reset) end
+    if sectionApis and sectionApis.combat and sectionApis.combat.reset then pcall(sectionApis.combat.reset) end
+    if sectionApis and sectionApis.teleport and sectionApis.teleport.reset then pcall(sectionApis.teleport.reset) end
+    if sectionApis and sectionApis.utilities and sectionApis.utilities.reset then pcall(sectionApis.utilities.reset) end
+    if sectionApis and sectionApis.troll and sectionApis.troll.reset then pcall(sectionApis.troll.reset) end
+    if sectionApis and sectionApis.admin and sectionApis.admin.reset then pcall(sectionApis.admin.reset) end
+    if sectionApis and sectionApis.world and sectionApis.world.reset then pcall(sectionApis.world.reset) end
+    if sectionApis and sectionApis.fun and sectionApis.fun.reset then pcall(sectionApis.fun.reset) end
+
+    -- Movers centrais
+    if bodyVelocity.Parent then bodyVelocity.Parent = nil end
+    if bodyGyro.Parent then bodyGyro.Parent = nil end
+
+    -- Interromper efeito de cor pulsante
+    if colorTweenConnection then pcall(function() colorTweenConnection:Disconnect() end); colorTweenConnection = nil end
+
+    -- Restaurar estados básicos
+    if humanoid then
+        humanoid.PlatformStand = false
+        if humanoidRootPart then humanoidRootPart.Anchored = false end
+    end
+
+    -- Desconectar/limpar conexões e objetos remanescentes
+    for _, v in pairs(connections) do
+        if typeof(v) == "RBXScriptConnection" then
+            pcall(function() v:Disconnect() end)
+        elseif type(v) == "table" then
+            for _, obj in pairs(v) do
+                if typeof(obj) == "RBXScriptConnection" then
+                    pcall(function() obj:Disconnect() end)
+                elseif obj and obj.Destroy then
+                    pcall(function() obj:Destroy() end)
+                end
+            end
+        elseif v and v.Destroy then
+            pcall(function() v:Destroy() end)
+        end
+    end
+    connections = {}
+    originalValues = {}
 end
 local function onCharacterAdded(newChar)
 if scriptTerminated then return end
 character = newChar
 humanoid = newChar:WaitForChild("Humanoid")
 humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
--- Movers de voo são geridos pela seção Movimento
-if spinEnabled then
-local spinGyro = Instance.new("BodyAngularVelocity")
-spinGyro.AngularVelocity = Vector3.new(0, 50, 0)
-spinGyro.MaxTorque = Vector3.new(0, math.huge, 0)
-spinGyro.Parent = humanoidRootPart
-connections.spin = {spinGyro}
-end
-if invisibleEnabled then
-applyInvisibility(true)
-end
-if anchorEnabled then
-    -- Reativar o sistema de grudar no chão após respawn
-    toggleAnchor()
-    toggleAnchor() -- Toggle twice para reativar
-end
-if carryPartsEnabled then
-    -- Reativar o sistema de carregar partes após respawn
-    toggleCarryParts()
-    toggleCarryParts() -- Toggle twice para reativar
-end
-if markPartsEnabled then
-    -- Reativar o sistema de marcar partes após respawn
-    toggleMarkParts()
-    toggleMarkParts() -- Toggle twice para reativar
-end
-if noFallDamageEnabled then
-attachNoFallDamage()
-end
-if rainbowEnabled then
-toggleRainbow() -- Reconnect the loop
-toggleRainbow() -- Toggle twice to re-enable
-end
-if xrayEnabled then
-toggleXray()
-toggleXray()
-end
-if bigHeadOn then
-toggleBigHead()
-toggleBigHead()
-end
-if connections.flashlight and flashlightButton.Text:find("ON") then
-if not connections.flashlight.Parent then
-local light = Instance.new("PointLight")
-light.Brightness = 10
-light.Range = 60
-light.Parent = character:FindFirstChild("Head") or humanoidRootPart
-connections.flashlight = light
-end
-end
-end
--- Conexões dos botões
--- Notificar seções após respawn
-if sectionApis and sectionApis.movement and sectionApis.movement.onCharacterAdded then
-    pcall(sectionApis.movement.onCharacterAdded, character)
+    -- Notificar módulos sobre novo character
+    if sectionApis and sectionApis.movement and sectionApis.movement.onCharacterAdded then pcall(sectionApis.movement.onCharacterAdded, character) end
+    if sectionApis and sectionApis.combat and sectionApis.combat.onCharacterAdded then pcall(sectionApis.combat.onCharacterAdded, character) end
+    if sectionApis and sectionApis.teleport and sectionApis.teleport.onCharacterAdded then pcall(sectionApis.teleport.onCharacterAdded, character) end
+    if sectionApis and sectionApis.utilities and sectionApis.utilities.onCharacterAdded then pcall(sectionApis.utilities.onCharacterAdded, character) end
+    if sectionApis and sectionApis.troll and sectionApis.troll.onCharacterAdded then pcall(sectionApis.troll.onCharacterAdded, character) end
+    if sectionApis and sectionApis.admin and sectionApis.admin.onCharacterAdded then pcall(sectionApis.admin.onCharacterAdded, character) end
+    if sectionApis and sectionApis.world and sectionApis.world.onCharacterAdded then pcall(sectionApis.world.onCharacterAdded, character) end
+    if sectionApis and sectionApis.fun and sectionApis.fun.onCharacterAdded then pcall(sectionApis.fun.onCharacterAdded, character) end
 end
 
 -- Conexões dos botões
-godButton.MouseButton1Click:Connect(toggleGod)
-clickTpButton.MouseButton1Click:Connect(toggleClickTp)
-invisibleButton.MouseButton1Click:Connect(toggleInvisible)
-fullBrightButton.MouseButton1Click:Connect(toggleFullBright)
-rainbowButton.MouseButton1Click:Connect(toggleRainbow)
-lowGravityButton.MouseButton1Click:Connect(toggleLowGravity)
-autoHealButton.MouseButton1Click:Connect(toggleAutoHeal)
-antiFallButton.MouseButton1Click:Connect(toggleAntiFall)
-noFallDamageButton.MouseButton1Click:Connect(toggleNoFallDamage)
-anchorButton.MouseButton1Click:Connect(toggleAnchor)
-carryPartsButton.MouseButton1Click:Connect(toggleCarryParts)
-markPartsButton.MouseButton1Click:Connect(toggleMarkParts)
-antiAfkButton.MouseButton1Click:Connect(toggleAntiAfk)
-xrayButton.MouseButton1Click:Connect(toggleXray)
-spinButton.MouseButton1Click:Connect(toggleSpin)
-wallClimbButton.MouseButton1Click:Connect(toggleWallClimb)
-swimInAirButton.MouseButton1Click:Connect(toggleSwimInAir)
-reachButton.MouseButton1Click:Connect(toggleReach)
-tpRandomButton.MouseButton1Click:Connect(tpRandomPlayer)
-tpSpawnButton.MouseButton1Click:Connect(tpToSpawn)
-btoolsButton.MouseButton1Click:Connect(giveBtools)
-flashlightButton.MouseButton1Click:Connect(toggleFlashlight)
-trollButton.MouseButton1Click:Connect(toggleTroll)
-flingButton.MouseButton1Click:Connect(performFling)
-resetButton.MouseButton1Click:Connect(resetAllFeatures)
-exitButton.MouseButton1Click:Connect(terminateScript)
+-- Conexões de botões agora são criadas dentro de cada módulo de seção
 minimizeButton.MouseButton1Click:Connect(toggleMinimize)
-removeFogButton.MouseButton1Click:Connect(deleteFog)
-forceDayButton.MouseButton1Click:Connect(forceDay)
-forceNightButton.MouseButton1Click:Connect(forceNight)
-removeRoofButton.MouseButton1Click:Connect(removeRoof)
-removeWallsButton.MouseButton1Click:Connect(removeWalls)
-followPlayerButton.MouseButton1Click:Connect(toggleFollowPlayer)
-freezeAllButton.MouseButton1Click:Connect(toggleFreezeAll)
-autoFireButton.MouseButton1Click:Connect(toggleAutoFire)
-noRecoilButton.MouseButton1Click:Connect(toggleNoRecoil)
-bigHeadButton.MouseButton1Click:Connect(toggleBigHead)
 -- Controles de valor da seção Movimento estão dentro do módulo
 -- Comandos de chat
 connections.chat = player.Chatted:Connect(function(message)
-if scriptTerminated then return end
-local lowerMessage = message:lower()
-if lowerMessage == "/voar" then
-toggleFly()
-elseif lowerMessage == "/atravessar" then
-toggleNoclip()
-elseif lowerMessage == "/deus" then
-toggleGod()
-elseif lowerMessage == "/velocidade" then
-toggleSpeedHack()
-elseif lowerMessage == "/invisivel" or lowerMessage == "/invis" then
-toggleInvisible()
-elseif lowerMessage == "/grudar" then
-toggleAnchor()
-elseif lowerMessage == "/soltar" then
--- Soltar todas as partes carregadas
-for _, part in pairs(carriedParts) do
-    if part and part.Parent then
-        local bodyPosition = part:FindFirstChild("CarryPosition")
-        if bodyPosition then
-            bodyPosition:Destroy()
-        end
+    if scriptTerminated then return end
+    local lowerMessage = message:lower()
+    if lowerMessage == "/reiniciar" then
+        resetAllFeatures()
+    elseif lowerMessage == "/sair" or lowerMessage == "/encerrar" or lowerMessage == "/exit" then
+        terminateScript()
+    else
+        print("Dica: use os botões da GUI para controlar as funcionalidades.")
     end
-end
-carriedParts = {}
-carryOffsets = {}
-print("Todas as partes foram soltas!")
-elseif lowerMessage:sub(1, 8) == "/carregar" then
--- Pegar uma parte específica próxima para carregar
-local range = 20
-for _, obj in pairs(workspace:GetDescendants()) do
-    if obj:IsA("BasePart") and obj ~= humanoidRootPart and not obj.Anchored and obj.Parent ~= character then
-        local distance = (obj.Position - humanoidRootPart.Position).Magnitude
-        if distance <= range then
-            -- Verificar se já não está sendo carregada
-            local alreadyCarried = false
-            for _, carriedPart in pairs(carriedParts) do
-                if carriedPart == obj then
-                    alreadyCarried = true
-                    break
-                end
-            end
-            
-            if not alreadyCarried then
-                table.insert(carriedParts, obj)
-                carryOffsets[obj] = obj.Position - humanoidRootPart.Position
-                
-                local bodyPosition = Instance.new("BodyPosition")
-                bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
-                bodyPosition.P = 3000
-                bodyPosition.D = 500
-                bodyPosition.Parent = obj
-                bodyPosition.Name = "CarryPosition"
-                bodyPosition.Position = humanoidRootPart.Position + carryOffsets[obj]
-                
-                print("Parte carregada: " .. obj.Name)
-                break
-            end
-        end
-    end
-end
-elseif lowerMessage == "/marcar" then
-toggleMarkParts()
-elseif lowerMessage == "/reiniciar" then
-resetAllFeatures()
-end
 end)
 -- Sistema de Drag Alternativo (mais simples)
 local function setupDragSystem()
@@ -2239,6 +2137,40 @@ end
 setupDragSystem()
 connections.characterAdded = player.CharacterAdded:Connect(onCharacterAdded)
 onCharacterAdded(character)
+
+-- Montar seção Sistema por último para incluir botões de reset/encerrar
+do
+    local ctx = {
+        services = {},
+        player = player,
+        character = character,
+        humanoid = humanoid,
+        humanoidRootPart = humanoidRootPart,
+        connections = connections,
+        originals = originalValues,
+        gui = { screenGui = screenGui, mainFrame = mainFrame, contentFrame = contentFrame },
+        ui = { createButton = createButton, createLabel = createLabel, createValueControl = createValueControl, updateButtonState = updateButtonState },
+        yOffset = yOffset,
+        system = {
+            resetAll = function()
+                if type(resetAllFeatures) == "function" then resetAllFeatures() end
+            end,
+            terminate = function()
+                terminateScript()
+            end
+        }
+    }
+    local ok, mod = loadSection("system")
+    if ok and mod and type(mod.mount) == "function" then
+        sectionApis.system = mod.mount(ctx)
+        yOffset = ctx.yOffset
+    else
+        warn("Não foi possível carregar a seção Sistema. Código: " .. tostring(mod))
+    end
+end
+
+-- Atualizar canvas após montar todas as seções
+contentFrame.CanvasSize = UDim2.new(0, 0, 0, yOffset + 80)
 print("🔥 Admin Script v2.0 carregado com sucesso! 🔥")
 print("💡 Use os botões na GUI ou comandos de chat (/voar, /atravessar, /deus, etc.)")
 print("� Painel aparece no canto esquerdo da tela")
